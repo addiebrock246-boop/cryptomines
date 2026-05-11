@@ -1,16 +1,19 @@
-import json
-from http import HTTPStatus
+from flask import Flask, request
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
-from telegram.ext import Application, CommandHandler
+from telegram.ext import Application, CommandHandler, ContextTypes
 
 BOT_TOKEN = "7129346547:AAFVXqR30l27yg6rCwgymPe85gbbaPriQVo"
 GAME_URL = "https://cryptomines.vercel.app"
 PHOTO_URL = "https://cryptomines.vercel.app/dia.jpeg"
 
-application = Application.builder().token(BOT_TOKEN).build()
-initialized = False
+# Flask app
+app = Flask(__name__)
 
-async def start(update: Update, context):
+# Telegram application
+application = Application.builder().token(BOT_TOKEN).build()
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Send photo
     await context.bot.send_photo(
         chat_id=update.effective_chat.id,
         photo=PHOTO_URL,
@@ -26,6 +29,7 @@ async def start(update: Update, context):
         ),
         parse_mode="Markdown"
     )
+    # Send launch button
     keyboard = [[InlineKeyboardButton("🎮 Launch Game", web_app=WebAppInfo(url=GAME_URL))]]
     await update.message.reply_text(
         "Ready to play?",
@@ -34,31 +38,15 @@ async def start(update: Update, context):
 
 application.add_handler(CommandHandler("start", start))
 
-async def handler(request):
-    global initialized
-    # Initialize application only once per cold start
-    if not initialized:
-        await application.initialize()
-        initialized = True
+@app.route("/api", methods=["POST"])
+async def webhook():
+    """Telegram updates yahan aate hain"""
+    await application.initialize()
+    data = request.get_json()
+    update = Update.de_json(data, application.bot)
+    await application.process_update(update)
+    return {"ok": True}
 
-    if request.method == "POST":
-        try:
-            # Vercel Python runtime: body is a string, not a coroutine
-            body = request.body
-            data = json.loads(body)
-            update = Update.de_json(data, application.bot)
-            await application.process_update(update)
-            return {
-                "statusCode": HTTPStatus.OK,
-                "body": json.dumps({"ok": True})
-            }
-        except Exception as e:
-            return {
-                "statusCode": HTTPStatus.INTERNAL_SERVER_ERROR,
-                "body": json.dumps({"error": str(e)})
-            }
-    else:
-        return {
-            "statusCode": HTTPStatus.METHOD_NOT_ALLOWED,
-            "body": "Use POST method"
-        }
+# Vercel ke liye handler
+def handler(request):
+    return app(request.environ, start_response)
