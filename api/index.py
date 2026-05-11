@@ -4,7 +4,6 @@ from http import HTTPStatus
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-# Enable logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -12,13 +11,10 @@ BOT_TOKEN = "7129346547:AAFVXqR30l27yg6rCwgymPe85gbbaPriQVo"
 GAME_URL = "https://cryptomines.vercel.app"
 PHOTO_URL = "https://cryptomines.vercel.app/dia.jpeg"
 
-# Build application
 application = Application.builder().token(BOT_TOKEN).build()
 
-# /start command handler
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        # Send photo
         await context.bot.send_photo(
             chat_id=update.effective_chat.id,
             photo=PHOTO_URL,
@@ -34,7 +30,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ),
             parse_mode="Markdown"
         )
-        # Send launch button
         keyboard = [[InlineKeyboardButton("🎮 Launch Game", web_app=WebAppInfo(url=GAME_URL))]]
         await update.message.reply_text(
             "Ready to play?",
@@ -45,9 +40,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 application.add_handler(CommandHandler("start", start))
 
-# Vercel serverless function entry point
 async def handler(request):
-    """Vercel framework ke saath compatible"""
     if request.method == "POST":
         try:
             body = await request.json()
