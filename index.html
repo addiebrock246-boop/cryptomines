@@ -49,7 +49,12 @@
             80% { transform: translateX(7px); }
         }
 
-        .container { width:100%; max-width:440px; position: relative; }
+        .container {
+            width:100%;
+            max-width:440px;
+            position: relative;
+            will-change: transform, opacity;
+        }
 
         /* Overlay */
         .overlay {
@@ -93,7 +98,15 @@
             justify-content: space-between;
             margin-bottom: 20px;
         }
-        .brand-left { display: flex; flex-direction: column; }
+        .brand-left {
+            display: flex;
+            flex-direction: column;
+        }
+        .brand-top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
         .brand-rk {
             font-family: 'Dancing Script', cursive;
             font-size: 34px;
@@ -102,6 +115,31 @@
             text-shadow: 0 0 25px rgba(245,182,66,0.7);
             letter-spacing: 3px;
         }
+        /* Settings button with text */
+        .settings-header-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(245,182,66,0.15);
+            border: 1px solid var(--gold);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--gold);
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 0 10px rgba(245,182,66,0.2);
+        }
+        .settings-header-btn:active {
+            background: var(--gold);
+            color: #000;
+            transform: scale(0.95);
+        }
+        .settings-header-btn .gear {
+            font-size: 18px;
+        }
+
         .brand-cryptomines {
             display: flex;
             align-items: center;
@@ -162,15 +200,6 @@
             gap: 6px;
             box-shadow: 0 0 15px rgba(245,182,66,0.2);
         }
-        .settings-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: var(--gold);
-            padding: 4px;
-            filter: drop-shadow(0 0 5px var(--gold));
-        }
 
         /* Game Config */
         .game-config {
@@ -203,6 +232,7 @@
             outline: none;
             text-align: center;
             font-weight: 600;
+            transition: border 0.2s, box-shadow 0.2s;
         }
         .input-field:focus {
             border-color: var(--gold);
@@ -225,8 +255,9 @@
             justify-content: center;
             font-size: 28px;
             cursor: pointer;
-            transition: 0.15s;
+            transition: transform 0.15s, background 0.15s, border-color 0.15s, box-shadow 0.15s;
             font-weight: bold;
+            will-change: transform;
         }
         .cell:active:not(.revealed) { transform: scale(0.93); background: #2a2a45; }
         .cell.revealed { cursor: default; }
@@ -259,7 +290,8 @@
             width: 100%;
             box-shadow: 0 6px 25px rgba(245,182,66,0.4);
             margin-top: 8px;
-            transition: 0.2s;
+            transition: all 0.2s;
+            will-change: transform;
         }
         .start-btn:disabled { opacity:0.45; box-shadow:none; transform:none; }
         .start-btn:active:not(:disabled) { transform: scale(0.97); }
@@ -277,6 +309,7 @@
             box-shadow: 0 4px 15px rgba(46,213,115,0.3);
             animation: pulse 2s infinite;
             margin-top: 6px;
+            will-change: transform;
         }
         .cashout-btn:disabled { opacity:0.45; animation:none; box-shadow:none; }
         @keyframes pulse {
@@ -340,6 +373,7 @@
             padding: 20px;
             overflow-y: auto;
             border-left: 1px solid rgba(255,215,0,0.2);
+            will-change: right;
         }
         .settings-fullscreen.open { right: 0; }
         .settings-backdrop {
@@ -361,7 +395,7 @@
         }
         .panel-section { margin-bottom: 24px; }
         .panel-title {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 700;
             color: var(--gold);
             text-transform: uppercase;
@@ -369,6 +403,13 @@
             margin-bottom: 12px;
             border-bottom: 1px solid rgba(255,215,0,0.2);
             padding-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .panel-title .title-emoji {
+            font-size: 1.4em;
+            filter: drop-shadow(0 0 4px var(--gold));
         }
         .wallet-address {
             font-size: 13px;
@@ -415,29 +456,50 @@
             color: var(--text-dim);
             margin-top: 4px;
         }
+        /* Stylish avatar grid */
         .avatar-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            margin: 12px 0;
+            gap: 12px;
+            margin: 14px 0;
         }
         .avatar-option {
-            font-size: 30px;
-            background: var(--surface);
-            border: 2px solid transparent;
-            border-radius: 12px;
+            font-size: 38px;
+            background: linear-gradient(145deg, #1e1e3a, #0f0f22);
+            border: 2px solid rgba(255,215,0,0.3);
+            border-radius: 16px;
             aspect-ratio: 1;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            position: relative;
+        }
+        .avatar-option:active {
+            transform: scale(0.93);
         }
         .avatar-option.selected {
             border-color: var(--gold);
-            box-shadow: 0 0 15px var(--gold);
-            transform: scale(1.1);
+            box-shadow: 0 0 20px var(--gold), 0 0 40px rgba(245,182,66,0.4);
+            transform: scale(1.05);
+            background: linear-gradient(145deg, #2a2a4a, #1a1a30);
         }
+        .avatar-option::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 18px;
+            background: radial-gradient(circle at 30% 30%, rgba(245,182,66,0.2), transparent);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .avatar-option.selected::after {
+            opacity: 1;
+        }
+
         .txid-guide {
             background: rgba(255,215,0,0.05);
             border: 1px solid rgba(255,215,0,0.2);
@@ -454,6 +516,13 @@
             width: 18px; height: 18px; display: flex; align-items: center;
             justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0;
         }
+        .powered-by {
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 12px;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 <body>
@@ -461,7 +530,12 @@
         <!-- Header -->
         <div class="header">
             <div class="brand-left">
-                <span class="brand-rk">RK</span>
+                <div class="brand-top">
+                    <span class="brand-rk">RK</span>
+                    <div class="settings-header-btn" onclick="openSettings()">
+                        <span class="gear">⚙️</span> <span>Settings</span>
+                    </div>
+                </div>
                 <span class="brand-cryptomines"><span class="gem-icon">💎</span> CryptoMines</span>
                 <span class="tg-handle">@UsdtMinesOfficialBot</span>
             </div>
@@ -475,14 +549,13 @@
                     <span id="balanceDisplay">0.00</span>
                     <span style="font-size:12px;color:var(--text-dim);">USDT</span>
                 </div>
-                <button class="settings-btn" onclick="openSettings()">⚙️</button>
             </div>
         </div>
 
-        <!-- Game Config (Amount Bet + Bombs + Cashout) -->
+        <!-- Game Config -->
         <div class="game-config" id="gameConfig">
             <div class="input-group">
-                <span class="input-label">Amount Bet (Min 10)</span>
+                <span class="input-label">AMOUNT BET (MIN 10 USDT)</span>
                 <input class="input-field" id="betInput" type="number" value="10" min="10" step="0.1">
             </div>
             <div class="input-group">
@@ -519,15 +592,15 @@
     </div>
 
     <!-- Settings Backdrop -->
-    <div class="settings-backdrop" id="settingsBackdrop" onclick="closeSettings()"></div>
+    <div class="settings-backdrop" id="settingsBackdrop" onclick="closeSettings(event)"></div>
 
     <!-- Fullscreen Settings Panel -->
     <div class="settings-fullscreen" id="settingsPanel">
-        <button class="settings-close" onclick="closeSettings()">✕</button>
+        <button class="settings-close" onclick="closeSettings(event)">✕</button>
 
         <!-- Profile -->
         <div class="panel-section">
-            <div class="panel-title">👤 Profile</div>
+            <div class="panel-title"><span class="title-emoji">👤</span> Profile</div>
             <input class="input-field" id="usernameInput" type="text" placeholder="Enter username" style="width:100%; margin-bottom:12px;">
             <div class="avatar-grid" id="avatarGrid"></div>
             <button class="copy-btn" style="width:100%; margin-top:10px;" onclick="saveProfile()">Save Profile</button>
@@ -536,7 +609,7 @@
 
         <!-- Wallet -->
         <div class="panel-section">
-            <div class="panel-title">💼 Deposit Wallet</div>
+            <div class="panel-title"><span class="title-emoji">💼</span> Deposit Wallet</div>
             <div class="network-tag">🔗 BNB Smart Chain (BEP20) · Only USDT</div>
             <div class="wallet-address" id="panelWallet">0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4</div>
             <button class="copy-btn" onclick="copyWallet()">📋 Copy Address</button>
@@ -546,7 +619,7 @@
 
         <!-- Deposit Verify -->
         <div class="panel-section">
-            <div class="panel-title">📥 Verify Deposit</div>
+            <div class="panel-title"><span class="title-emoji">📥</span> Verify Deposit</div>
             <p style="text-align:center; font-size:12px; color:#ffd700; margin-bottom:8px;">📌 Minimum deposit: 10 USDT</p>
             <div class="txid-guide">
                 <ul>
@@ -562,7 +635,7 @@
 
         <!-- Withdraw (fake) -->
         <div class="panel-section">
-            <div class="panel-title">📤 Withdraw</div>
+            <div class="panel-title"><span class="title-emoji">📤</span> Withdraw</div>
             <input class="input-field" id="withdrawAmount" type="number" placeholder="Amount (USDT)" style="width:100%; margin-bottom:8px;">
             <input class="input-field" id="withdrawAddress" type="text" placeholder="Your BNB SMART CHAIN ADDRESS" style="width:100%; margin-bottom:8px;">
             <button class="copy-btn" style="width:100%;" onclick="fakeWithdraw()">Request Withdrawal</button>
@@ -571,10 +644,11 @@
 
         <!-- Promo Code -->
         <div class="panel-section">
-            <div class="panel-title">🎟️ Promo Code</div>
+            <div class="panel-title"><span class="title-emoji">🎟️</span> Promo Code</div>
             <input class="input-field" id="promoInput" type="text" placeholder="Enter promo code" style="width:100%; margin-bottom:8px;">
             <button class="copy-btn" style="width:100%;" onclick="applyPromo()">Apply Promo</button>
             <div class="message" id="promoMsg"></div>
+            <div class="powered-by">Powered by RK</div>
         </div>
 
         <!-- Cashout inside panel (during game) -->
@@ -586,7 +660,7 @@
     <script>
         // ======================= CONFIG =======================
         const OWNER_WALLET = "0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4".toLowerCase();
-        const BSCSCAN_API_KEY = "9FVNCFNKRZX2G2YU8EYYN78N84KI477KIM"; // APNI API KEY
+        const BSCSCAN_API_KEY = "9FVNCFNKRZX2G2YU8EYYN78N84KI477KIM";
         const USDT_CONTRACT = "0x55d398326f99059ff775485246999027b3197955".toLowerCase();
         const GRID_SIZE = 5;
         const TOTAL_CELLS = 25;
@@ -645,7 +719,7 @@
         let userAvatar = "😊";
         const avatarOptions = ["🐱","🐶","🐸","🐼","🐨","🦊","🐯","🐻‍❄️","🐵","🦁"];
 
-        // 1000+ Mixed Names Pool (Indian, Arabic, American)
+        // 1000+ Mixed Names Pool (Indian, Arabic, American) – same as before
         const playerNames = [
             "James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Thomas",
             "Charles", "Christopher", "Daniel", "Matthew", "Anthony", "Mark", "Donald", "Steven", "Paul",
@@ -702,7 +776,6 @@
             "Giselle", "Summer", "Valeria", "Reese", "Mila", "Tatum", "Brooke", "Paige",
             "Miriam", "Fiona", "Gracie", "Juliette", "Rose", "Rebecca", "Michelle", "Ryleigh"
         ];
-        // Duplicate to reach ~1000 names
         const extendedNames = playerNames.concat(playerNames);
         const extraNames = playerNames.slice(0, 400);
         const fullNamePool = extendedNames.concat(extraNames);
@@ -924,10 +997,13 @@
         function openSettings() {
             settingsPanel.classList.add('open');
             settingsBackdrop.classList.add('show');
+            document.body.style.overflow = 'hidden';
         }
-        function closeSettings() {
+        function closeSettings(event) {
+            if (event) event.stopPropagation();
             settingsPanel.classList.remove('open');
             settingsBackdrop.classList.remove('show');
+            document.body.style.overflow = '';
         }
 
         // ======================= COPY WALLET =======================
@@ -949,7 +1025,7 @@
             alert('✅ Copied!');
         }
 
-        // ======================= DEPOSIT VERIFY (with your API key) =======================
+        // ======================= DEPOSIT VERIFY =======================
         async function verifyDeposit() {
             const txHash = document.getElementById('txHashInput').value.trim();
             if (!txHash) {
