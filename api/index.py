@@ -1,5 +1,4 @@
 import json
-import asyncio
 from http import HTTPStatus
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import Application, CommandHandler
@@ -12,7 +11,6 @@ application = Application.builder().token(BOT_TOKEN).build()
 initialized = False
 
 async def start(update: Update, context):
-    # 1. Photo bhejo
     await context.bot.send_photo(
         chat_id=update.effective_chat.id,
         photo=PHOTO_URL,
@@ -28,7 +26,6 @@ async def start(update: Update, context):
         ),
         parse_mode="Markdown"
     )
-    # 2. Launch button bhejo
     keyboard = [[InlineKeyboardButton("🎮 Launch Game", web_app=WebAppInfo(url=GAME_URL))]]
     await update.message.reply_text(
         "Ready to play?",
@@ -39,15 +36,17 @@ application.add_handler(CommandHandler("start", start))
 
 async def handler(request):
     global initialized
-    # Initialize app only once per cold‑start
+    # Initialize application only once per cold start
     if not initialized:
         await application.initialize()
         initialized = True
 
     if request.method == "POST":
         try:
-            body = await request.json()
-            update = Update.de_json(body, application.bot)
+            # Vercel Python runtime: body is a string, not a coroutine
+            body = request.body
+            data = json.loads(body)
+            update = Update.de_json(data, application.bot)
             await application.process_update(update)
             return {
                 "statusCode": HTTPStatus.OK,
