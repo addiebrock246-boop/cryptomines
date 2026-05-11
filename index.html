@@ -25,15 +25,14 @@
             color: var(--text);
             display: flex;
             justify-content: center;
-            align-items: center;                         /* ab center align */
+            align-items: center;
             min-height: 100vh;
-            padding: 5vh 10px;                           /* 5% ऊपर-नीचे, side padding */
+            padding: 5vh 10px;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
             background-image: radial-gradient(circle at 20% 30%, rgba(245,182,66,0.06) 0%, transparent 50%),
                               radial-gradient(circle at 80% 70%, rgba(55,66,250,0.04) 0%, transparent 50%);
             animation: bgShift 15s ease infinite;
-            /* 👇 बस ये overflow:hidden हटा दिया है */
         }
         @keyframes bgShift {
             0%,100% { background-position: 0% 0%; }
@@ -53,14 +52,13 @@
         .container {
             width:100%;
             max-width:440px;
-            max-height: 90vh;                    /* 👈 screen का 90% height */
-            overflow-y: auto;                    /* 👈 scrollable inside if needed */
+            max-height: 90vh;
+            overflow-y: auto;
             position: relative;
             will-change: transform, opacity;
-            /* transform: scale(0.85) हटा दिया */
-            border-radius: 20px;                 /* थोड़ा rectangular+rounded feel */
+            border-radius: 20px;
             padding: 16px;
-            background: rgba(10,10,26,0.8);     /* slight background for card look */
+            background: rgba(10,10,26,0.8);
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
@@ -99,11 +97,10 @@
             box-shadow: 0 0 20px rgba(245,182,66,0.5);
         }
 
-        /* Header */
+        /* Header – now single column layout */
         .header {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
+            flex-direction: column;
             margin-bottom: 20px;
         }
         .brand-left {
@@ -114,6 +111,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-wrap: wrap;              /* so items can wrap on small screens */
         }
         .brand-rk {
             font-family: 'Dancing Script', cursive;
@@ -146,6 +144,20 @@
         .settings-header-btn .gear {
             font-size: 18px;
         }
+        .balance-badge {
+            background: var(--surface);
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 14px;
+            padding: 8px 14px;
+            font-weight: 700;
+            color: var(--gold);
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 0 15px rgba(245,182,66,0.2);
+            margin-left: auto;           /* push to right if needed, but now it's next to settings */
+        }
 
         .brand-cryptomines {
             display: flex;
@@ -154,7 +166,7 @@
             font-size: 16px;
             font-weight: 700;
             color: var(--text);
-            margin-top: 2px;
+            margin-top: 6px;
         }
         .brand-cryptomines .gem-icon { font-size: 20px; }
         .tg-handle {
@@ -164,16 +176,11 @@
             letter-spacing: 0.5px;
         }
 
-        .right-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
         .profile-area {
             display: flex;
             align-items: center;
             gap: 6px;
-            margin-right: 6px;
+            margin-top: 10px;           /* space from above */
         }
         .avatar-icon {
             font-size: 20px;
@@ -189,23 +196,6 @@
         .username-text {
             font-size: 13px;
             font-weight: 600;
-            max-width: 70px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .balance-badge {
-            background: var(--surface);
-            border: 1px solid rgba(255,215,0,0.3);
-            border-radius: 14px;
-            padding: 8px 14px;
-            font-weight: 700;
-            color: var(--gold);
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            box-shadow: 0 0 15px rgba(245,182,66,0.2);
         }
 
         /* Game Config */
@@ -364,7 +354,7 @@
         .win-amount { color: var(--green); font-weight: 600; }
         .loss-amount { color: var(--red); font-weight: 600; }
 
-        /* Fullscreen Settings Panel (unchanged) */
+        /* Fullscreen Settings Panel */
         .settings-fullscreen {
             position: fixed;
             top: 0;
@@ -533,29 +523,32 @@
 </head>
 <body>
     <div class="container" id="app">
-        <!-- Header -->
+        <!-- Header (redesigned) -->
         <div class="header">
             <div class="brand-left">
+                <!-- First row: RK, Settings, Wallet -->
                 <div class="brand-top">
                     <span class="brand-rk">RK</span>
                     <div class="settings-header-btn" onclick="openSettings()">
                         <span class="gear">⚙️</span> <span>Settings</span>
                     </div>
+                    <!-- Balance badge moved here -->
+                    <div class="balance-badge">
+                        <span>💰</span>
+                        <span id="balanceDisplay">0.00</span>
+                        <span style="font-size:12px;color:var(--text-dim);">USDT</span>
+                    </div>
                 </div>
+                <!-- Second row: game branding -->
                 <span class="brand-cryptomines"><span class="gem-icon">💎</span> CryptoMines</span>
                 <span class="tg-handle">@UsdtMinesOfficialBot</span>
-            </div>
-            <div class="right-header">
+                <!-- Third row: profile (guest) -->
                 <div class="profile-area" id="profileArea">
                     <span class="avatar-icon" id="headerAvatar">😊</span>
                     <span class="username-text" id="headerUsername">Guest</span>
                 </div>
-                <div class="balance-badge">
-                    <span>💰</span>
-                    <span id="balanceDisplay">0.00</span>
-                    <span style="font-size:12px;color:var(--text-dim);">USDT</span>
-                </div>
             </div>
+            <!-- No right-header anymore -->
         </div>
 
         <!-- Game Config -->
