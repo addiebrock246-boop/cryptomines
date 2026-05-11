@@ -1,12 +1,21 @@
 import json
+from flask import Flask, request
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler
 
+# ----- TERI DETAILS (ALREADY SET) -----
 BOT_TOKEN = "7129346547:AAFVXqR30l27yg6rCwgymPe85gbbaPriQVo"
 GAME_URL = "https://cryptomines.vercel.app"
-PHOTO_URL = "https://cryptomines.vercel.app/dia.jpeg"   # <--- yahan update
+PHOTO_URL = "https://cryptomines.vercel.app/dia.jpeg"  # apni photo
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# Flask app
+app = Flask(__name__)
+
+# Telegram application
+application = Application.builder().token(BOT_TOKEN).build()
+
+async def start(update: Update, context):
+    # 1. Photo bhejo
     await context.bot.send_photo(
         chat_id=update.effective_chat.id,
         photo=PHOTO_URL,
@@ -22,22 +31,25 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ),
         parse_mode="Markdown"
     )
-    keyboard = [
-        [InlineKeyboardButton("🎮 Launch Game", web_app=WebAppInfo(url=GAME_URL))]
-    ]
+    # 2. Launch button bhejo
+    keyboard = [[InlineKeyboardButton("🎮 Launch Game", web_app=WebAppInfo(url=GAME_URL))]]
     await update.message.reply_text(
         "Ready to play?",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
-application = Application.builder().token(BOT_TOKEN).build()
 application.add_handler(CommandHandler("start", start))
 
-async def handler(request):
-    if request.method == "POST":
-        body = await request.body()
-        update = Update.de_json(json.loads(body), application.bot)
-        await application.initialize()
-        await application.process_update(update)
-        return {"status": "ok"}
-    return {"status": "webhook active"}
+# ------------------------------------------------------------
+# Vercel ke liye route
+@app.route("/api", methods=["POST"])
+async def webhook():
+    await application.initialize()
+    data = request.get_json()
+    update = Update.de_json(data, application.bot)
+    await application.process_update(update)
+    return {"status": "ok"}
+
+# Vercel Python runtime handler
+def handler(request):
+    return app(request.environ, start_response)
