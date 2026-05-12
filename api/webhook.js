@@ -16,7 +16,7 @@ module.exports = async function handler(req, res) {
     const chatId = message?.chat?.id;
 
     if (text === '/start' && chatId) {
-      // Send photo with caption and inline keyboard
+      // Photo bhejo
       const photoRes = await fetch(`${TELEGRAM_API}/sendPhoto`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -43,16 +43,16 @@ module.exports = async function handler(req, res) {
         })
       });
 
-      const photoData = await photoRes.json();
-      // Agar photo fail ho gaya to ek text message bheje
       if (!photoRes.ok) {
-        console.error('sendPhoto error:', photoData);
+        const errData = await photoRes.json();
+        console.error('sendPhoto error:', errData);
+        // Photo fail hone ka reason Telegram pe bhejo (debugging ke liye)
         await fetch(`${TELEGRAM_API}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             chat_id: chatId,
-            text: `❌ Photo send failed: ${photoData.description}`
+            text: `❌ Photo send failed: ${errData.description}`
           })
         });
       }
