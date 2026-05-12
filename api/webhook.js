@@ -4,10 +4,9 @@ const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 const GAME_URL = 'https://cryptomines.vercel.app';
 const PHOTO_URL = 'https://cryptomines.vercel.app/dia.jpeg';
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
-    res.status(405).send('Method Not Allowed');
-    return;
+    return res.status(405).send('Method Not Allowed');
   }
 
   try {
@@ -16,10 +15,9 @@ export default async function handler(req, res) {
     const text = message?.text?.trim();
     const chatId = message?.chat?.id;
 
-    // Sirf /start command handle karega
     if (text === '/start' && chatId) {
-      // Photo + caption + inline button bhejega
-      await fetch(`${TELEGRAM_API}/sendPhoto`, {
+      // Send photo with caption and inline keyboard
+      const photoRes = await fetch(`${TELEGRAM_API}/sendPhoto`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -44,12 +42,24 @@ export default async function handler(req, res) {
           }
         })
       });
-      res.status(200).json({ ok: true });
-    } else {
-      res.status(200).json({ ok: true, ignored: true });
+
+      const photoData = await photoRes.json();
+      // Agar photo fail ho gaya to ek text message bheje
+      if (!photoRes.ok) {
+        console.error('sendPhoto error:', photoData);
+        await fetch(`${TELEGRAM_API}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: `❌ Photo send failed: ${photoData.description}`
+          })
+        });
+      }
     }
+    res.status(200).json({ ok: true });
   } catch (err) {
     console.error('Webhook error:', err);
     res.status(500).json({ error: err.message });
   }
-}
+};
