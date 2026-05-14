@@ -1,22 +1,23 @@
 export default async function handler(req, res) {
-    const { session_id } = req.query;
-    const crossmintApiKey = process.env.CROSSMINT_API_KEY;
+    const { invoice_id } = req.query;
+    const apiKey = process.env.NOWPAYMENTS_API_KEY;
 
-    const crossmintBase = crossmintApiKey.startsWith('sk_staging')
-        ? 'https://staging.crossmint.com'
-        : 'https://www.crossmint.com';
+    if (!apiKey) {
+        return res.status(500).json({ error: 'Server misconfiguration: API key missing' });
+    }
 
     try {
-        const response = await fetch(`${crossmintBase}/api/2022-06-09/checkout/sessions/${session_id}`, {
-            headers: { 'x-api-key': crossmintApiKey }
+        const response = await fetch(`https://api.nowpayments.io/v1/invoice/${invoice_id}`, {
+            headers: { 'x-api-key': apiKey }
         });
+
         const data = await response.json();
-        const status = data.status;  // 'pending', 'processing', 'completed', 'failed'
+        // NOWPayments statuses: 'created', 'partially_paid', 'finished', 'failed', 'expired'
         res.json({
-            status: status === 'completed' ? 'finished' : status,
-            paid: status === 'completed'
+            status: data.payment_status,
+            paid: parseFloat(data.actually_paid) || 0
         });
     } catch (error) {
-        res.status(500).json({ error: 'Server error' });
+        res.status(500).json({ error: 'Status check failed' });
     }
 }
