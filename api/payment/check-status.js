@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-    const { invoice_id } = req.query;  // frontend se ?invoice_id=xxxx
+    const { invoice_id } = req.query;
     const apiKey = process.env.NOWPAYMENTS_API_KEY;
 
     try {
@@ -7,9 +7,7 @@ export default async function handler(req, res) {
             headers: { 'x-api-key': apiKey }
         });
         const data = await response.json();
-        
-        // NOWPayments status: 'finished' = paid, 'expired'/'failed' otherwise
-        let status = data.payment_status; 
+        let status = data.payment_status;
         let paid = parseFloat(data.actually_paid) || 0;
         res.json({ status, paid });
     } catch (error) {
