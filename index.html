@@ -534,84 +534,83 @@
 
         // ======================= DEPOSIT VIA NOWPAYMENTS =======================
         function triggerFiatDeposit() {
-            const cur = getCurrencyInfo(displayCurrency);
-            const min = getMinBetLocal().toFixed(2);
-            const sym = cur.symbol;
-            const amountStr = prompt(`Enter amount in ${sym} (min ${min} ${sym}):`);
-            if (!amountStr) return;
-            const amount = parseFloat(amountStr);
-            if (isNaN(amount) || amount < getMinBetLocal()) {
-                alert(`Minimum deposit is ${min} ${sym}`);
-                return;
-            }
-            pendingDepositAmount = amount;
+    const cur = getCurrencyInfo(displayCurrency);
+    const min = getMinBetLocal().toFixed(2);
+    const sym = cur.symbol;
+    const amountStr = prompt(`Enter amount in ${sym} (min ${min} ${sym}):`);
+    if (!amountStr) return;
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount < getMinBetLocal()) {
+        alert(`Minimum deposit is ${min} ${sym}`);
+        return;
+    }
+    pendingDepositAmount = amount;
 
-            const msgDiv = document.getElementById('fiatDepositMsg');
-            msgDiv.textContent = 'Creating payment link...';
-            msgDiv.className = 'message';
+    const msgDiv = document.getElementById('fiatDepositMsg');
+    msgDiv.textContent = 'Creating payment link...';
+    msgDiv.className = 'message';
 
-            const paymentCurrency = displayCurrency === "DEFAULT" ? "USD" : displayCurrency;
+    const paymentCurrency = displayCurrency === "DEFAULT" ? "USD" : displayCurrency;
 
-            fetch('/api/payment/create-deposit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    user_id: userId,
-                    amount: amount,
-                    currency: paymentCurrency,
-                    is_fiat: displayCurrency !== "DEFAULT"   // DEFAULT crypto, baaki sab fiat
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.checkout_url) {
-                    window.open(data.checkout_url, '_blank');
-                    msgDiv.textContent = 'Complete payment in new tab. Checking...';
-                    pollPaymentStatus(data.invoice_id, data.type, msgDiv);
+    fetch('/api/payment/create-deposit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            user_id: userId,
+            amount: amount,
+            currency: paymentCurrency
+            // is_fiat nahi bhejna hai
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.checkout_url) {
+            window.open(data.checkout_url, '_blank');
+            msgDiv.textContent = 'Complete payment in new tab. Checking...';
+            pollPaymentStatus(data.session_id, msgDiv);  // <-- session_id bhejna
+        } else {
+            msgDiv.textContent = 'Error: ' + (data.error || 'Unknown error');
+            msgDiv.className = 'message error';
+        }
+    })
+    .catch(e => {
+        msgDiv.textContent = 'Network error: ' + e.message;
+        msgDiv.className = 'message error';
+    });
+}
+
+        function pollPaymentStatus(sessionId, msgDiv, retries = 60) {
+    const interval = setInterval(async () => {
+        try {
+            const resp = await fetch(`/api/payment/check-status?session_id=${sessionId}`);
+            const data = await resp.json();
+            if (data.status === 'finished') {
+                clearInterval(interval);
+                if (pendingDepositAmount > 0) {
+                    balances[displayCurrency] += pendingDepositAmount;
+                    updateBalance();
+                    const sym = getCurrencyInfo(displayCurrency).symbol;
+                    msgDiv.textContent = `✅ Deposit successful! +${pendingDepositAmount.toFixed(2)} ${sym}`;
+                    msgDiv.className = 'message success';
+                    pendingDepositAmount = 0;
                 } else {
-                    msgDiv.textContent = 'Error: ' + (data.error || 'Unknown error');
+                    msgDiv.textContent = 'Payment received but amount missing.';
                     msgDiv.className = 'message error';
                 }
-            })
-            .catch(e => {
-                msgDiv.textContent = 'Network error: ' + e.message;
+            } else if (data.status === 'failed' || data.status === 'expired') {
+                clearInterval(interval);
+                msgDiv.textContent = 'Payment failed or expired.';
                 msgDiv.className = 'message error';
-            });
+            }
+        } catch(e) { console.error(e); }
+        retries--;
+        if (retries <= 0) {
+            clearInterval(interval);
+            msgDiv.textContent = 'Payment status check timed out.';
+            msgDiv.className = 'message error';
         }
-
-        function pollPaymentStatus(invoiceId, type, msgDiv, retries = 60) {
-            const interval = setInterval(async () => {
-                try {
-                    const resp = await fetch(`/api/payment/check-status?invoice_id=${invoiceId}&type=${type}`);
-                    const data = await resp.json();
-                    if (data.status === 'finished') {
-                        clearInterval(interval);
-                        if (pendingDepositAmount > 0) {
-                            balances[displayCurrency] += pendingDepositAmount;
-                            updateBalance();
-                            const sym = getCurrencyInfo(displayCurrency).symbol;
-                            msgDiv.textContent = `✅ Deposit successful! +${pendingDepositAmount.toFixed(2)} ${sym}`;
-                            msgDiv.className = 'message success';
-                            pendingDepositAmount = 0;
-                        } else {
-                            msgDiv.textContent = 'Payment received but amount missing.';
-                            msgDiv.className = 'message error';
-                        }
-                    } else if (data.status === 'expired' || data.status === 'failed') {
-                        clearInterval(interval);
-                        msgDiv.textContent = 'Payment failed or expired.';
-                        msgDiv.className = 'message error';
-                    }
-                } catch(e) { console.error(e); }
-                retries--;
-                if (retries <= 0) {
-                    clearInterval(interval);
-                    msgDiv.textContent = 'Payment status check timed out.';
-                    msgDiv.className = 'message error';
-                }
-            }, 5000);
-        }
-
+    }, 5000);
+}
         // ======================= WITHDRAWAL =======================
         function openWithdrawModal() {
             document.getElementById('withdrawOverlay').classList.add('active');
