@@ -11,7 +11,7 @@ export default async function handler(req, res) {
 
     const recipientAddress = '0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4';
     const chain = 'bsc';
-    const settleCurrency = 'usdt';  // tera USDT (BSC) address
+    const settleCurrency = 'usdt';
 
     try {
         const response = await fetch(`${crossmintBase}/api/2022-06-09/checkout/sessions`, {
@@ -26,13 +26,13 @@ export default async function handler(req, res) {
                     chain: chain,
                     currency: settleCurrency
                 },
-                paymentMethods: ['card', 'googlePay'],  // Google Pay + Cards
+                paymentMethods: ['card', 'googlePay'],
                 lineItems: [{
                     title: 'Cash Mines Deposit',
                     description: `Deposit ${amount} ${currency}`,
                     price: {
                         amount: amount.toString(),
-                        currency: currency.toLowerCase()  // "inr", "usd", "eur", etc.
+                        currency: currency.toLowerCase()
                     },
                     quantity: 1
                 }],
@@ -42,15 +42,22 @@ export default async function handler(req, res) {
         });
 
         const data = await response.json();
+
+        // ⚠️ Temporary logging – Vercel logs mein Crossmint ka response dikhega
+        console.log('Crossmint response:', JSON.stringify(data));
+
         if (data.checkoutUrl) {
             res.status(200).json({
                 checkout_url: data.checkoutUrl,
                 session_id: data.id
             });
         } else {
+            // Log the error details as well
+            console.error('Crossmint error:', data);
             res.status(400).json({ error: data.message || 'Failed to create session' });
         }
     } catch (error) {
+        console.error('Server error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 }
