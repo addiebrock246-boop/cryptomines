@@ -3,553 +3,228 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RK | CryptoMines</title>
+    <title>RK | CASH MINES</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Inter:wght@400;600;700;800&family=Playfair+Display:wght@800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0a0a1a;
-            --surface: #15152e;
-            --gold: #f5b642;
-            --gold-dark: #d4942b;
-            --green: #2ed573;
-            --red: #ff4757;
-            --text: #ffffff;
-            --text-dim: #9090a8;
-            --border: rgba(255,255,255,0.1);
+            --bg: #0a0a1a; --surface: #15152e; --gold: #f5b642; --gold-dark: #d4942b;
+            --green: #2ed573; --red: #ff4757; --text: #ffffff; --text-dim: #9090a8;
+            --border: rgba(255,255,255,0.1); --accent1: #f5b642; --accent2: #d4942b;
+            --theme-gradient: linear-gradient(135deg, #0a0a1a, #15152e);
         }
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
-            background: var(--bg);
-            font-family: 'Inter', sans-serif;
-            color: var(--text);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 5vh 10px;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            background-image: radial-gradient(circle at 20% 30%, rgba(245,182,66,0.06) 0%, transparent 50%),
-                              radial-gradient(circle at 80% 70%, rgba(55,66,250,0.04) 0%, transparent 50%);
-            animation: bgShift 15s ease infinite;
+            background: var(--theme-gradient);
+            font-family: 'Inter', sans-serif; color: var(--text);
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            padding: 5vh 10px; user-select: none; -webkit-tap-highlight-color: transparent;
+            transition: background 0.5s ease;
         }
-        @keyframes bgShift {
-            0%,100% { background-position: 0% 0%; }
-            50% { background-position: 100% 100%; }
-        }
-        body.shake {
-            animation: shake 0.5s ease;
-        }
-        @keyframes shake {
-            0%,100% { transform: translateX(0); }
-            20% { transform: translateX(-10px); }
-            40% { transform: translateX(10px); }
-            60% { transform: translateX(-7px); }
-            80% { transform: translateX(7px); }
-        }
+        body.shake { animation: shake 0.5s ease; }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 20%{translateX(-10px)} 40%{translateX(10px)} 60%{translateX(-7px)} 80%{translateX(7px)} }
 
-        .container {
-            width:100%;
-            max-width:440px;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-            will-change: transform, opacity;
-            border-radius: 20px;
-            padding: 16px;
-            background: rgba(10,10,26,0.8);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        /* Overlay */
-        .overlay {
-            position: fixed;
-            top:0; left:0; right:0; bottom:0;
-            background: rgba(0,0,0,0.92);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 200;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-        }
+        .container { width:100%; max-width:440px; max-height:90vh; overflow-y:auto; position:relative; border-radius:20px; padding:16px; background:rgba(10,10,26,0.8); box-shadow:0 10px 30px rgba(0,0,0,0.5); }
+        .overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.92); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:200; opacity:0; pointer-events:none; transition:opacity 0.3s; }
         .overlay.active { opacity:1; pointer-events:auto; }
-        .overlay-text {
-            font-size: 48px;
-            font-weight: 800;
-            color: var(--red);
-            text-shadow: 0 0 40px rgba(255,71,87,0.8);
-            margin-bottom: 10px;
-        }
-        .overlay-sub { color: var(--text-dim); font-size: 16px; margin-bottom: 20px; }
-        .overlay-btn {
-            background: var(--gold);
-            color: #000;
-            border: none;
-            border-radius: 14px;
-            padding: 14px 32px;
-            font-weight: 700;
-            font-size: 16px;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(245,182,66,0.5);
-        }
+        .overlay-text { font-size:48px; font-weight:800; color:var(--red); text-shadow:0 0 40px rgba(255,71,87,0.8); margin-bottom:10px; }
+        .overlay-sub { color:var(--text-dim); font-size:16px; margin-bottom:20px; }
+        .overlay-btn { background:var(--gold); color:#000; border:none; border-radius:14px; padding:14px 32px; font-weight:700; font-size:16px; cursor:pointer; box-shadow:0 0 20px rgba(245,182,66,0.5); }
 
-        /* Header – now single column layout */
-        .header {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 20px;
+        .header { display:flex; flex-direction:column; margin-bottom:20px; }
+        .brand-left { display:flex; flex-direction:column; }
+        .brand-top { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+        .brand-rk { font-family:'Dancing Script', cursive; font-size:34px; color:var(--gold); line-height:1; text-shadow:0 0 25px rgba(245,182,66,0.7); letter-spacing:3px; }
+        .settings-header-btn, .withdraw-header-btn {
+            display:flex; align-items:center; gap:6px; background:rgba(245,182,66,0.15); border:1px solid var(--gold); border-radius:20px; padding:6px 14px; font-size:14px; font-weight:700; color:var(--gold); cursor:pointer; transition:all 0.2s;
         }
-        .brand-left {
-            display: flex;
-            flex-direction: column;
-        }
-        .brand-top {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .brand-rk {
-            font-family: 'Dancing Script', cursive;
-            font-size: 34px;
-            color: var(--gold);
-            line-height: 1;
-            text-shadow: 0 0 25px rgba(245,182,66,0.7);
-            letter-spacing: 3px;
-        }
-        .settings-header-btn {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(245,182,66,0.15);
-            border: 1px solid var(--gold);
-            border-radius: 20px;
-            padding: 6px 14px;
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--gold);
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 0 10px rgba(245,182,66,0.2);
-        }
-        .settings-header-btn:active {
-            background: var(--gold);
-            color: #000;
-            transform: scale(0.95);
-        }
-        .settings-header-btn .gear {
-            font-size: 18px;
-        }
-        .balance-badge {
-            background: var(--surface);
-            border: 1px solid rgba(255,215,0,0.3);
-            border-radius: 14px;
-            padding: 8px 14px;
-            font-weight: 700;
-            color: var(--gold);
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            box-shadow: 0 0 15px rgba(245,182,66,0.2);
-            margin-left: auto;
-        }
+        .settings-header-btn:active, .withdraw-header-btn:active { background:var(--gold); color:#000; transform:scale(0.95); }
+        .balance-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:4px; }
+        .add-funds-btn { background:rgba(255,215,0,0.1); border:1px solid var(--gold); color:var(--gold); border-radius:10px; padding:8px 12px; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px; transition:0.2s; }
+        .add-funds-btn:hover { background:var(--gold); color:#000; }
+        .balance-badge { background:var(--surface); border:1px solid rgba(255,215,0,0.3); border-radius:14px; padding:8px 14px; font-weight:700; color:var(--gold); font-size:16px; display:flex; align-items:center; gap:6px; box-shadow:0 0 15px rgba(245,182,66,0.2); }
+        .currency-selector, .language-selector { position:relative; }
+        .select-btn { background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:8px 12px; font-size:14px; cursor:pointer; display:flex; align-items:center; gap:6px; }
+        .dropdown-content { position:absolute; top:100%; left:0; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:8px; min-width:180px; z-index:10; max-height:220px; overflow-y:auto; }
+        .dropdown-item { padding:8px; cursor:pointer; display:flex; align-items:center; gap:8px; }
+        .dropdown-item:hover { background:rgba(255,215,0,0.1); }
+        .search-input { width:100%; padding:6px; background:var(--surface); border:1px solid var(--border); border-radius:6px; color:var(--text); margin-bottom:6px; }
 
-        .brand-cryptomines {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--text);
-            margin-top: 6px;
-        }
-        .brand-cryptomines .gem-icon { font-size: 20px; }
-        .tg-handle {
-            font-size: 11px;
-            color: var(--text-dim);
-            margin-top: 2px;
-            letter-spacing: 0.5px;
-        }
+        .brand-cryptomines { display:flex; align-items:center; gap:6px; font-size:20px; font-weight:800; color:var(--text); margin-top:6px; font-family:'Playfair Display', serif; background:linear-gradient(135deg, var(--gold), #ffdd59, var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:2px; }
+        .brand-cryptomines .gem-icon { font-size:22px; -webkit-text-fill-color:initial; }
+        .tg-handle { font-size:11px; color:var(--text-dim); margin-top:2px; letter-spacing:0.5px; }
+        .profile-area { display:flex; align-items:center; gap:6px; margin-top:10px; }
+        .avatar-icon { font-size:20px; background:var(--surface); border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:1px solid var(--gold); }
+        .username-text { font-size:13px; font-weight:600; }
 
-        .profile-area {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-top: 10px;
-        }
-        .avatar-icon {
-            font-size: 20px;
-            background: var(--surface);
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid var(--gold);
-        }
-        .username-text {
-            font-size: 13px;
-            font-weight: 600;
-        }
+        .game-config { display:flex; gap:10px; margin-bottom:14px; align-items:flex-end; flex-wrap:wrap; }
+        .input-group { flex:1; min-width:80px; display:flex; flex-direction:column; gap:4px; }
+        .input-label { font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.5px; }
+        .input-field { background:var(--surface); border:1px solid rgba(255,215,0,0.25); border-radius:10px; padding:12px; color:var(--text); font-size:15px; outline:none; text-align:center; font-weight:600; transition:border 0.2s, box-shadow 0.2s; }
+        .input-field:focus { border-color:var(--gold); box-shadow:0 0 12px rgba(245,182,66,0.2); }
+        .grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin:16px 0; }
+        .cell { aspect-ratio:1; background:var(--surface); border:1px solid rgba(255,215,0,0.15); border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:28px; cursor:pointer; transition:transform 0.15s, background 0.15s, border-color 0.15s, box-shadow 0.15s; font-weight:bold; will-change:transform; }
+        .cell:active:not(.revealed) { transform:scale(0.93); background:#2a2a45; }
+        .cell.revealed { cursor:default; }
+        .cell.gem { background:rgba(46,213,115,0.15); border-color:var(--green); animation:gemPop 0.3s ease; box-shadow:0 0 16px rgba(46,213,115,0.5); }
+        .cell.bomb { background:rgba(255,71,87,0.2); border-color:var(--red); box-shadow:0 0 16px rgba(255,71,87,0.5); }
+        @keyframes gemPop { 0%{transform:scale(0.7)} 60%{transform:scale(1.15)} 100%{transform:scale(1)} }
 
-        /* Game Config */
-        .game-config {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 14px;
-            align-items: flex-end;
-            flex-wrap: wrap;
-        }
-        .input-group {
-            flex: 1;
-            min-width: 80px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .input-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            color: var(--text-dim);
-            letter-spacing: 0.5px;
-        }
-        .input-field {
-            background: var(--surface);
-            border: 1px solid rgba(255,215,0,0.25);
-            border-radius: 10px;
-            padding: 12px;
-            color: var(--text);
-            font-size: 15px;
-            outline: none;
-            text-align: center;
-            font-weight: 600;
-            transition: border 0.2s, box-shadow 0.2s;
-        }
-        .input-field:focus {
-            border-color: var(--gold);
-            box-shadow: 0 0 12px rgba(245,182,66,0.2);
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
-            margin: 16px 0;
-        }
-        .cell {
-            aspect-ratio: 1;
-            background: var(--surface);
-            border: 1px solid rgba(255,215,0,0.15);
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            cursor: pointer;
-            transition: transform 0.15s, background 0.15s, border-color 0.15s, box-shadow 0.15s;
-            font-weight: bold;
-            will-change: transform;
-        }
-        .cell:active:not(.revealed) { transform: scale(0.93); background: #2a2a45; }
-        .cell.revealed { cursor: default; }
-        .cell.gem {
-            background: rgba(46,213,115,0.15);
-            border-color: var(--green);
-            animation: gemPop 0.3s ease;
-            box-shadow: 0 0 16px rgba(46,213,115,0.5);
-        }
-        .cell.bomb {
-            background: rgba(255,71,87,0.2);
-            border-color: var(--red);
-            box-shadow: 0 0 16px rgba(255,71,87,0.5);
-        }
-        @keyframes gemPop {
-            0% { transform: scale(0.7); }
-            60% { transform: scale(1.15); }
-            100% { transform: scale(1); }
-        }
-
-        .start-btn {
-            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-            color: #000;
-            border: none;
-            border-radius: 14px;
-            padding: 16px;
-            font-weight: 700;
-            font-size: 18px;
-            cursor: pointer;
-            width: 100%;
-            box-shadow: 0 6px 25px rgba(245,182,66,0.4);
-            margin-top: 8px;
-            transition: all 0.2s;
-            will-change: transform;
-        }
+        .start-btn { background:linear-gradient(135deg, var(--accent1), var(--accent2)); color:#000; border:none; border-radius:14px; padding:16px; font-weight:700; font-size:18px; cursor:pointer; width:100%; box-shadow:0 6px 25px rgba(245,182,66,0.4); margin-top:8px; transition:all 0.2s; will-change:transform; }
         .start-btn:disabled { opacity:0.45; box-shadow:none; transform:none; }
-        .start-btn:active:not(:disabled) { transform: scale(0.97); }
-
-        .cashout-btn {
-            background: linear-gradient(135deg, var(--green), #1abc9c);
-            color: #000;
-            border: none;
-            border-radius: 14px;
-            padding: 14px;
-            font-weight: 700;
-            font-size: 16px;
-            cursor: pointer;
-            width: 100%;
-            box-shadow: 0 4px 15px rgba(46,213,115,0.3);
-            animation: pulse 2s infinite;
-            margin-top: 6px;
-            will-change: transform;
-        }
+        .start-btn:active:not(:disabled) { transform:scale(0.97); }
+        .cashout-btn { background:linear-gradient(135deg,var(--green),#1abc9c); color:#000; border:none; border-radius:14px; padding:14px; font-weight:700; font-size:16px; cursor:pointer; width:100%; box-shadow:0 4px 15px rgba(46,213,115,0.3); animation:pulse 2s infinite; margin-top:6px; will-change:transform; }
         .cashout-btn:disabled { opacity:0.45; animation:none; box-shadow:none; }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(46,213,115,0.5); }
-            70% { box-shadow: 0 0 0 10px rgba(46,213,115,0); }
-            100% { box-shadow: 0 0 0 0 rgba(46,213,115,0); }
-        }
+        @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(46,213,115,0.5)} 70%{box-shadow:0 0 0 10px rgba(46,213,115,0)} 100%{box-shadow:0 0 0 0 rgba(46,213,115,0)} }
 
-        .message { text-align: center; font-size: 14px; font-weight: 600; min-height: 20px; margin-top: 8px; }
-        .message.success { color: var(--green); }
-        .message.error { color: var(--red); }
+        .message { text-align:center; font-size:14px; font-weight:600; min-height:20px; margin-top:8px; }
+        .message.success { color:var(--green); } .message.error { color:var(--red); }
+        .history-section { margin-top:20px; background:var(--surface); border-radius:16px; padding:16px; border:1px solid var(--border); }
+        .history-title { font-size:13px; font-weight:700; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+        .history-table { width:100%; font-size:12px; border-collapse:collapse; }
+        .history-table th { text-align:left; color:var(--text-dim); font-weight:600; padding-bottom:6px; border-bottom:1px solid var(--border); }
+        .history-table td { padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.03); }
+        .win-amount { color:var(--green); font-weight:600; } .loss-amount { color:var(--red); font-weight:600; }
 
-        /* History table */
-        .history-section {
-            margin-top: 20px;
-            background: var(--surface);
-            border-radius: 16px;
-            padding: 16px;
-            border: 1px solid var(--border);
-        }
-        .history-title {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--gold);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-        }
-        .history-table {
-            width: 100%;
-            font-size: 12px;
-            border-collapse: collapse;
-        }
-        .history-table th {
-            text-align: left;
-            color: var(--text-dim);
-            font-weight: 600;
-            padding-bottom: 6px;
-            border-bottom: 1px solid var(--border);
-        }
-        .history-table td {
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
-        }
-        .win-amount { color: var(--green); font-weight: 600; }
-        .loss-amount { color: var(--red); font-weight: 600; }
+        .settings-fullscreen { position:fixed; top:0; right:-100%; width:100%; height:100%; background:rgba(15,15,35,0.98); backdrop-filter:blur(20px); transition:right 0.35s ease; z-index:300; display:flex; flex-direction:column; padding:20px; overflow-y:auto; border-left:1px solid rgba(255,215,0,0.2); will-change:right; }
+        .settings-fullscreen.open { right:0; }
+        .settings-backdrop { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:250; display:none; }
+        .settings-backdrop.show { display:block; }
+        .settings-close { align-self:flex-end; background:none; border:none; font-size:28px; color:var(--text-dim); cursor:pointer; margin-bottom:20px; }
+        .panel-section { margin-bottom:24px; }
+        .panel-title { font-size:15px; font-weight:700; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; border-bottom:1px solid rgba(255,215,0,0.2); padding-bottom:4px; display:flex; align-items:center; gap:8px; }
+        .panel-title .title-emoji { font-size:1.4em; filter:drop-shadow(0 0 4px var(--gold)); }
+        .copy-btn { background:rgba(255,215,0,0.1); border:1px solid var(--gold); color:var(--gold); border-radius:10px; padding:10px; font-size:13px; cursor:pointer; width:100%; font-weight:600; transition:0.2s; }
+        .copy-btn:active { background:var(--gold); color:#000; }
+        .avatar-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin:14px 0; }
+        .avatar-option { font-size:38px; background:linear-gradient(145deg,#1e1e3a,#0f0f22); border:2px solid rgba(255,215,0,0.3); border-radius:16px; aspect-ratio:1; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 12px rgba(0,0,0,0.4); position:relative; }
+        .avatar-option:active { transform:scale(0.93); }
+        .avatar-option.selected { border-color:var(--gold); box-shadow:0 0 20px var(--gold),0 0 40px rgba(245,182,66,0.4); transform:scale(1.05); background:linear-gradient(145deg,#2a2a4a,#1a1a30); }
+        .avatar-option::after { content:''; position:absolute; inset:-2px; border-radius:18px; background:radial-gradient(circle at 30% 30%, rgba(245,182,66,0.2), transparent); pointer-events:none; opacity:0; transition:opacity 0.3s; }
+        .avatar-option.selected::after { opacity:1; }
+        .powered-by { text-align:center; font-size:11px; color:var(--text-dim); margin-top:12px; letter-spacing:0.5px; }
+        .flag-strip { height:3px; border-radius:2px; margin:4px 0 8px; transition:all 0.5s ease; }
 
-        /* Fullscreen Settings Panel */
-        .settings-fullscreen {
-            position: fixed;
-            top: 0;
-            right: -100%;
-            width: 100%;
-            height: 100%;
-            background: rgba(15,15,35,0.98);
-            backdrop-filter: blur(20px);
-            transition: right 0.35s ease;
-            z-index: 300;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            overflow-y: auto;
-            border-left: 1px solid rgba(255,215,0,0.2);
-            will-change: right;
+        .usdt-wallet-bar {
+            background: var(--surface); border: 1px solid var(--gold); border-radius: 12px; padding: 10px 14px;
+            display: flex; align-items: center; justify-content: space-between; cursor: pointer;
+            margin: 8px 0 4px; transition: 0.3s;
         }
-        .settings-fullscreen.open { right: 0; }
-        .settings-backdrop {
-            position: fixed;
-            top:0; left:0; right:0; bottom:0;
-            background: rgba(0,0,0,0.7);
-            z-index: 250;
-            display: none;
+        .usdt-wallet-bar:hover { background: rgba(245,182,66,0.1); }
+        .usdt-wallet-bar-text { font-size: 13px; font-weight: 700; color: var(--gold); letter-spacing: 1px; }
+        .usdt-wallet-content {
+            max-height: 0; overflow: hidden; transition: max-height 0.4s ease; background: var(--surface);
+            border: 1px solid var(--border); border-top: none; border-radius: 0 0 12px 12px;
+            padding: 0 14px;
         }
-        .settings-backdrop.show { display: block; }
-        .settings-close {
-            align-self: flex-end;
-            background: none;
-            border: none;
-            font-size: 28px;
-            color: var(--text-dim);
-            cursor: pointer;
-            margin-bottom: 20px;
+        .usdt-wallet-content.open { max-height: 300px; padding: 14px; }
+        .qr-wrap { position: relative; display: inline-block; margin: 0 auto 10px; }
+        .qr-wrap img { width: 100px; height: 100px; border-radius: 10px; border: 2px solid var(--gold); box-shadow: 0 0 15px rgba(245,182,66,0.3); }
+        .qr-center-text {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #0a0a1a; color: var(--gold); font-weight: 800; font-size: 18px;
+            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            border: 2px solid var(--gold); font-family: 'Playfair Display', serif;
         }
-        .panel-section { margin-bottom: 24px; }
-        .panel-title {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--gold);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
-            border-bottom: 1px solid rgba(255,215,0,0.2);
-            padding-bottom: 4px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .panel-title .title-emoji {
-            font-size: 1.4em;
-            filter: drop-shadow(0 0 4px var(--gold));
-        }
-        .wallet-address {
-            font-size: 13px;
-            word-break: break-all;
-            background: rgba(255,255,255,0.05);
-            padding: 10px;
-            border-radius: 10px;
-            color: var(--text-dim);
-            margin-bottom: 8px;
-            border: 1px solid rgba(255,215,0,0.15);
-        }
-        .network-tag {
-            font-size: 12px;
-            color: var(--text-dim);
-            margin-bottom: 6px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .copy-btn {
-            background: rgba(255,215,0,0.1);
-            border: 1px solid var(--gold);
-            color: var(--gold);
-            border-radius: 10px;
-            padding: 10px;
-            font-size: 13px;
-            cursor: pointer;
-            width: 100%;
-            font-weight: 600;
-            transition: 0.2s;
-        }
-        .copy-btn:active { background: var(--gold); color: #000; }
-        .qr-code {
-            display: block;
-            width: 140px;
-            border-radius: 12px;
-            margin: 12px auto;
-            border: 2px solid rgba(255,215,0,0.3);
-        }
-        .small-note {
-            text-align: center;
-            font-size: 11px;
-            color: var(--text-dim);
-            margin-top: 4px;
-        }
-        .avatar-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 12px;
-            margin: 14px 0;
-        }
-        .avatar-option {
-            font-size: 38px;
-            background: linear-gradient(145deg, #1e1e3a, #0f0f22);
-            border: 2px solid rgba(255,215,0,0.3);
-            border-radius: 16px;
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            position: relative;
-        }
-        .avatar-option:active {
-            transform: scale(0.93);
-        }
-        .avatar-option.selected {
-            border-color: var(--gold);
-            box-shadow: 0 0 20px var(--gold), 0 0 40px rgba(245,182,66,0.4);
-            transform: scale(1.05);
-            background: linear-gradient(145deg, #2a2a4a, #1a1a30);
-        }
-        .avatar-option::after {
-            content: '';
-            position: absolute;
-            inset: -2px;
-            border-radius: 18px;
-            background: radial-gradient(circle at 30% 30%, rgba(245,182,66,0.2), transparent);
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        .avatar-option.selected::after {
-            opacity: 1;
-        }
+        .address-row { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); border-radius: 8px; padding: 6px 10px; margin-top: 8px; }
+        .address-text { font-size: 12px; word-break: break-all; color: var(--text-dim); flex: 1; }
+        .copy-icon-btn { background: none; border: none; color: var(--gold); font-size: 18px; cursor: pointer; padding: 4px; }
 
-        .txid-guide {
-            background: rgba(255,215,0,0.05);
-            border: 1px solid rgba(255,215,0,0.2);
-            border-radius: 12px;
-            padding: 10px;
-            font-size: 12px;
-            color: var(--text-dim);
-            margin-bottom: 12px;
+        .withdraw-modal-overlay {
+            position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.8);
+            display: flex; align-items: center; justify-content: center; z-index: 400;
+            visibility: hidden; opacity: 0; transition: 0.3s;
         }
-        .txid-guide ul { list-style: none; padding: 0; }
-        .txid-guide li { margin-bottom: 6px; display: flex; align-items: flex-start; gap: 6px; }
-        .step-num {
-            background: var(--gold); color: #000; border-radius: 50%;
-            width: 18px; height: 18px; display: flex; align-items: center;
-            justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0;
+        .withdraw-modal-overlay.active { visibility: visible; opacity: 1; }
+        .withdraw-modal {
+            background: var(--surface); border-radius: 20px; padding: 24px; width: 90%; max-width: 400px;
+            border: 1px solid var(--gold); box-shadow: 0 10px 30px rgba(0,0,0,0.6);
         }
-        .powered-by {
-            text-align: center;
-            font-size: 11px;
-            color: var(--text-dim);
-            margin-top: 12px;
-            letter-spacing: 0.5px;
+        .withdraw-modal h3 { color: var(--gold); margin-bottom: 16px; text-align: center; }
+        .withdraw-input { margin-bottom: 12px; }
+        .withdraw-input label { font-size: 13px; color: var(--text-dim); display: block; margin-bottom: 4px; }
+        .withdraw-input input {
+            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px;
+            padding: 12px; color: var(--text); font-size: 15px; outline: none;
         }
+        .withdraw-modal .btn-row { display: flex; gap: 10px; margin-top: 16px; }
+        .withdraw-modal .btn { flex:1; padding: 12px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
+        .withdraw-modal .btn-primary { background: var(--gold); color:#000; }
+        .withdraw-modal .btn-secondary { background: rgba(255,255,255,0.1); color: var(--text); }
+        .withdraw-modal .msg { text-align: center; margin-top: 10px; font-size: 14px; }
+        .caution-text { font-size: 11px; color: var(--red); margin-top: 8px; text-align: center; }
     </style>
 </head>
 <body>
-
-    <!-- ══════════════════════════════════════════
-         SPLASH SCREEN (Simplified for Telegram)
-         ══════════════════════════════════════════ -->
     <div id="splashOverlay" style="position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; justify-content:center; align-items:center;">
         <div id="leftDoor" style="position:absolute; left:0; top:0; width:50%; height:100%; background:var(--bg);"></div>
         <div id="rightDoor" style="position:absolute; right:0; top:0; width:50%; height:100%; background:var(--bg);"></div>
         <div id="splashText" style="font-size:48px; font-weight:800; color:var(--gold); font-family:'Dancing Script', cursive; z-index:2;">POWERED BY RK</div>
     </div>
 
-    <!-- Game container (original) -->
     <div class="container" id="app">
-        <!-- Header (redesigned) -->
         <div class="header">
             <div class="brand-left">
                 <div class="brand-top">
                     <span class="brand-rk">RK</span>
                     <div class="settings-header-btn" onclick="openSettings()">
-                        <span class="gear">⚙️</span> <span>Settings</span>
+                        <span class="gear">⚙️</span> <span data-i18n="settings">Settings</span>
                     </div>
+                    <div class="withdraw-header-btn" onclick="openWithdrawModal()">
+                        💸 WITHDRAWAL
+                    </div>
+                </div>
+                <div class="balance-row">
+                    <button class="add-funds-btn" onclick="triggerFiatDeposit()" data-i18n="add_funds">💰 Add Funds</button>
                     <div class="balance-badge">
                         <span>💰</span>
                         <span id="balanceDisplay">0.00</span>
-                        <span style="font-size:12px;color:var(--text-dim);">USDT</span>
+                        <span id="currencySymbol">USDT</span>
                     </div>
                 </div>
-                <span class="brand-cryptomines"><span class="gem-icon">💎</span> CryptoMines</span>
-                <span class="tg-handle">@UsdtMinesOfficialBot</span>
+                <div style="display:flex; gap:10px; margin-top:6px; flex-wrap:wrap;">
+                    <div class="currency-selector">
+                        <button class="select-btn" onclick="toggleDropdown('currencyDropdown')">
+                            <span id="selectedCurrencyFlag">🌐</span>
+                            <span id="selectedCurrencyName">Default</span> ▾
+                        </button>
+                        <div class="dropdown-content" id="currencyDropdown" style="display:none;">
+                            <input type="text" class="search-input" placeholder="Search currency..." onkeyup="filterCurrency()" id="currencySearch">
+                            <div id="currencyList"></div>
+                        </div>
+                    </div>
+                    <div class="language-selector">
+                        <button class="select-btn" onclick="toggleDropdown('langDropdown')">
+                            <span id="selectedLangFlag">🇺🇸</span>
+                            <span id="selectedLangName">English</span> ▾
+                        </button>
+                        <div class="dropdown-content" id="langDropdown" style="display:none;">
+                            <input type="text" class="search-input" placeholder="Search language..." onkeyup="filterLang()" id="langSearch">
+                            <div id="langList"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flag-strip" id="flagStrip" style="background:linear-gradient(90deg, #f5b642, #d4942b);"></div>
+                <span class="brand-cryptomines"><span class="gem-icon">💎</span> CASH MINES</span>
+
+                <div id="usdtWalletBar" class="usdt-wallet-bar" style="display:flex;" onclick="toggleUSDTWallet()">
+                    <span class="usdt-wallet-bar-text">USDT ADDRESS BNB SMART CHAIN ONLY</span>
+                    <span style="color:var(--gold);">▾</span>
+                </div>
+                <div id="usdtWalletContent" class="usdt-wallet-content">
+                    <div style="display:flex; flex-direction:column; align-items:center;">
+                        <div class="qr-wrap">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4&ecc=H" alt="Wallet QR">
+                            <div class="qr-center-text">RK</div>
+                        </div>
+                        <div class="address-row">
+                            <span class="address-text">0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4</span>
+                            <button class="copy-icon-btn" onclick="copyWalletAddress()" title="Copy Address">📋</button>
+                        </div>
+                    </div>
+                </div>
+
+                <span class="tg-handle">@CASHMINESOFFICIAL</span>
                 <div class="profile-area" id="profileArea">
                     <span class="avatar-icon" id="headerAvatar">😊</span>
                     <span class="username-text" id="headerUsername">Guest</span>
@@ -557,97 +232,54 @@
             </div>
         </div>
 
-        <!-- Game Config -->
         <div class="game-config" id="gameConfig">
             <div class="input-group">
-                <span class="input-label">AMOUNT BET (MIN 10 USDT)</span>
+                <span class="input-label" id="betLabel">AMOUNT BET (MIN 10 USDT)</span>
                 <input class="input-field" id="betInput" type="number" value="10" min="10" step="0.1">
             </div>
             <div class="input-group">
-                <span class="input-label">Bombs</span>
+                <span class="input-label" data-i18n="bombs">Bombs</span>
                 <input class="input-field" id="minesInput" type="number" value="3" min="1" max="15">
             </div>
-            <button class="cashout-btn" id="cashoutBtn" disabled>💰 Cashout</button>
+            <button class="cashout-btn" id="cashoutBtn" disabled>💰 <span data-i18n="cashout">Cashout</span></button>
         </div>
 
-        <!-- Grid -->
         <div class="grid" id="grid"></div>
-
-        <!-- START BET Button -->
-        <button class="start-btn" id="startBtn">🔥 START BET</button>
+        <button class="start-btn" id="startBtn">🔥 <span data-i18n="start_bet">START BET</span></button>
         <div class="message" id="gameMsg"></div>
 
-        <!-- Players Betting History -->
         <div class="history-section" id="historySection">
-            <div class="history-title">📊 Players Bets</div>
+            <div class="history-title" data-i18n="players_bets">📊 Players Bets</div>
             <table class="history-table">
-                <thead>
-                    <tr><th>Player</th><th>Bet</th><th>Odds</th><th>Win/Loss</th></tr>
-                </thead>
+                <thead><tr><th data-i18n="player">Player</th><th data-i18n="bet">Bet</th><th data-i18n="odds">Odds</th><th data-i18n="win_loss">Win/Loss</th></tr></thead>
                 <tbody id="historyBody"></tbody>
             </table>
         </div>
     </div>
 
-    <!-- Lose Overlay -->
     <div class="overlay" id="loseOverlay">
-        <div class="overlay-text">💣 YOU LOST</div>
-        <div class="overlay-sub">Better luck next time!</div>
-        <button class="overlay-btn" onclick="closeOverlay()">PLAY AGAIN</button>
+        <div class="overlay-text">💣 <span data-i18n="you_lost">YOU LOST</span></div>
+        <div class="overlay-sub" data-i18n="better_luck">Better luck next time!</div>
+        <button class="overlay-btn" onclick="closeOverlay()" data-i18n="play_again">PLAY AGAIN</button>
     </div>
 
-    <!-- Settings Backdrop -->
     <div class="settings-backdrop" id="settingsBackdrop" onclick="closeSettings(event)"></div>
-
-    <!-- Fullscreen Settings Panel -->
     <div class="settings-fullscreen" id="settingsPanel">
         <button class="settings-close" onclick="closeSettings(event)">✕</button>
-
-        <!-- Profile -->
         <div class="panel-section">
-            <div class="panel-title"><span class="title-emoji">👤</span> Profile</div>
-            <input class="input-field" id="usernameInput" type="text" placeholder="Enter username" style="width:100%; margin-bottom:12px;">
+            <div class="panel-title"><span class="title-emoji">👤</span> <span data-i18n="profile">Profile</span></div>
+            <input class="input-field" id="usernameInput" type="text" placeholder="Enter username" data-i18n="username_placeholder" style="width:100%; margin-bottom:12px;">
             <div class="avatar-grid" id="avatarGrid"></div>
-            <button class="copy-btn" style="width:100%; margin-top:10px;" onclick="saveProfile()">Save Profile</button>
+            <button class="copy-btn" style="width:100%; margin-top:10px;" onclick="saveProfile()" data-i18n="save_profile">Save Profile</button>
             <div class="message" id="profileMsg"></div>
         </div>
-
-        <!-- Wallet -->
         <div class="panel-section">
-            <div class="panel-title"><span class="title-emoji">💼</span> Deposit Wallet</div>
-            <div class="network-tag">🔗 BNB Smart Chain (BEP20) · Only USDT</div>
-            <div class="wallet-address" id="panelWallet">0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4</div>
-            <button class="copy-btn" onclick="copyWallet()">📋 Copy Address</button>
-            <img class="qr-code" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4" alt="Wallet QR">
-            <p class="small-note">10 USDT minimum</p>
+            <div class="panel-title"><span class="title-emoji">💳</span> <span data-i18n="fiat_deposit">Fiat Deposit</span></div>
+            <button onclick="triggerFiatDeposit()" style="background:#2ed573; color:#000; border:none; border-radius:10px; padding:12px; font-weight:700; font-size:15px; cursor:pointer; width:100%;">
+                💳 DEPOSIT
+            </button>
+            <div id="fiatDepositMsg" class="message" style="margin-top:8px;"></div>
         </div>
-
-        <!-- Deposit Verify -->
-        <div class="panel-section">
-            <div class="panel-title"><span class="title-emoji">📥</span> Verify Deposit</div>
-            <p style="text-align:center; font-size:12px; color:#ffd700; margin-bottom:8px;">📌 Minimum deposit: 10 USDT</p>
-            <div class="txid-guide">
-                <ul>
-                    <li><span class="step-num">1</span> Send at least 10 USDT (BEP20) to the wallet.</li>
-                    <li><span class="step-num">2</span> Copy TX Hash from wallet's transaction history.</li>
-                    <li><span class="step-num">3</span> Paste below & tap Verify.</li>
-                </ul>
-            </div>
-            <input class="input-field" id="txHashInput" type="text" placeholder="Paste TX Hash" style="width:100%; margin-bottom:8px;">
-            <button class="copy-btn" style="width:100%;" onclick="verifyDeposit()">Verify</button>
-            <div class="message" id="depositMsg"></div>
-        </div>
-
-        <!-- Withdraw (fake) -->
-        <div class="panel-section">
-            <div class="panel-title"><span class="title-emoji">📤</span> Withdraw</div>
-            <input class="input-field" id="withdrawAmount" type="number" placeholder="Amount (USDT)" style="width:100%; margin-bottom:8px;">
-            <input class="input-field" id="withdrawAddress" type="text" placeholder="Your BNB SMART CHAIN ADDRESS" style="width:100%; margin-bottom:8px;">
-            <button class="copy-btn" style="width:100%;" onclick="fakeWithdraw()">Request Withdrawal</button>
-            <div class="message" id="withdrawMsg"></div>
-        </div>
-
-        <!-- Promo Code -->
         <div class="panel-section">
             <div class="panel-title"><span class="title-emoji">🎟️</span> Promo Code</div>
             <input class="input-field" id="promoInput" type="text" placeholder="Enter promo code" style="width:100%; margin-bottom:8px;">
@@ -655,525 +287,455 @@
             <div class="message" id="promoMsg"></div>
             <div class="powered-by">Powered by RK</div>
         </div>
-
-        <!-- Cashout inside panel (during game) -->
         <div class="panel-section" id="panelCashoutSection" style="display:none;">
             <button class="cashout-btn" id="panelCashoutBtn">💰 Cashout</button>
         </div>
     </div>
 
+    <div class="withdraw-modal-overlay" id="withdrawOverlay">
+        <div class="withdraw-modal">
+            <h3>💸 Withdraw</h3>
+            <!-- Step 1: Amount -->
+            <div id="withdrawStep1" style="display:block;">
+                <div class="withdraw-input">
+                    <label>Amount (<span id="withdrawCurrency">USDT</span>)</label>
+                    <input type="number" id="withdrawAmountInput" placeholder="Enter amount" min="0" step="0.01">
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-secondary" onclick="closeWithdrawModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="processWithdrawStep1()">Next</button>
+                </div>
+                <div class="msg error" id="withdrawError1"></div>
+            </div>
+            <!-- Step 2: USDT → Address | Others → Phone -->
+            <div id="withdrawStep2" style="display:none;">
+                <div id="usdtWithdrawFields" style="display:none;">
+                    <div class="withdraw-input">
+                        <label>Your BSC (BEP20) USDT Address</label>
+                        <input type="text" id="withdrawAddressInput" placeholder="0x...">
+                    </div>
+                    <div class="caution-text">⚠️ Ensure correct network (BNB Smart Chain). Wrong network = permanent loss.</div>
+                </div>
+                <div id="phoneWithdrawFields" style="display:none;">
+                    <div class="withdraw-input">
+                        <label>Phone Number (<span id="countryCodeLabel">+1</span>)</label>
+                        <input type="tel" id="phoneInput" placeholder="Enter phone number">
+                    </div>
+                    <div class="caution-text" id="phoneCaution">⚠️ Incorrect phone number may result in loss of your <span id="phoneCurrencyCaution">USDT</span>.</div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-secondary" onclick="closeWithdrawModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="processWithdrawStep2()">Submit</button>
+                </div>
+                <div class="msg error" id="withdrawError2"></div>
+            </div>
+            <!-- Step 3: Waiting -->
+            <div id="withdrawStep3" style="display:none; text-align:center;">
+                <p>⏳ Processing your withdrawal...</p>
+                <p style="font-size:12px; color:var(--text-dim);">Please wait 1 minute</p>
+            </div>
+            <!-- Step 4: Success -->
+            <div id="withdrawStep4" style="display:none; text-align:center;">
+                <p class="message success">✅ Withdrawal request submitted successfully!</p>
+                <button class="btn btn-primary" style="margin-top:16px;" onclick="closeWithdrawModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // ══════════════════════════════════════════
-        // SPLASH SCREEN DOOR ANIMATION (inline, no CSS classes)
-        // ══════════════════════════════════════════
-        setTimeout(() => {
-            document.getElementById('leftDoor').style.transform = 'translateX(-100%)';
-            document.getElementById('rightDoor').style.transform = 'translateX(100%)';
-            document.getElementById('splashText').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('splashOverlay').style.display = 'none';
-            }, 900);
-        }, 2000);
+        // ======================= CONFIG =======================
+        const OWNER_WALLET = "0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4";
+        const GRID_SIZE = 5, TOTAL_CELLS = 25, HOUSE_EDGE = 0.97, MIN_BET_USDT = 10;
 
-        // ======================= CONFIG (original game code) =======================
-        const OWNER_WALLET = "0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4".toLowerCase();
-        const BSCSCAN_API_KEY = "9FVNCFNKRZX2G2YU8EYYN78N84KI477KIM";
-        const USDT_CONTRACT = "0x55d398326f99059ff775485246999027b3197955".toLowerCase();
-        const GRID_SIZE = 5;
-        const TOTAL_CELLS = 25;
-        const HOUSE_EDGE = 0.97;
-        const MIN_DEPOSIT = 10;
-        const MIN_BET = 10;
+        let displayCurrency = "DEFAULT";
+        let exchangeRates = { USD: 1 };
+        let userLanguage = "en";
 
-        // ======================= PERSISTENT STORAGE =======================
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.ready();
-
-        const userId = tg.initDataUnsafe?.user?.id || 'demo_user';
-
-        const storage = {
-            async getItem(key) {
-                if (tg.CloudStorage) {
-                    return new Promise((resolve) => {
-                        tg.CloudStorage.getItem(key, (err, value) => {
-                            if (value != null) resolve(value);
-                            else resolve(localStorage.getItem(key));
-                        });
-                    });
-                } else {
-                    return localStorage.getItem(key);
-                }
-            },
-            async setItem(key, value) {
-                if (tg.CloudStorage) {
-                    return new Promise((resolve) => {
-                        tg.CloudStorage.setItem(key, value, (err, success) => {
-                            if (success) resolve();
-                            else {
-                                localStorage.setItem(key, value);
-                                resolve();
-                            }
-                        });
-                    });
-                } else {
-                    localStorage.setItem(key, value);
-                }
-            }
+        // ======================= PER-CURRENCY BALANCES =======================
+        // Initialise all supported currencies with 0.
+        // DEFAULT is USDT (base).
+        let balances = {
+            DEFAULT: 0,
+            USD: 0,
+            GBP: 0,
+            AUD: 0,
+            INR: 0,
+            PKR: 0,
+            EUR_MC: 0,
+            EUR_ES: 0
         };
 
-        function prefixedKey(field) {
-            return `rkmines_${userId}_${field}`;
+        const countryPhoneConfig = {
+            DEFAULT: { code:"+1", len:10 }, USD: { code:"+1", len:10 }, GBP: { code:"+44", len:10 },
+            AUD: { code:"+61", len:9 }, INR: { code:"+91", len:10 }, PKR: { code:"+92", len:10 },
+            EUR_MC: { code:"+377", len:8 }, EUR_ES: { code:"+34", len:9 }
+        };
+
+        const countryThemes = {
+            DEFAULT: { bg:"#0a0a1a", surface:"#15152e", gold:"#f5b642", goldDark:"#d4942b", accent1:"#f5b642", accent2:"#d4942b", flagColors:"#f5b642, #d4942b", flagGradient:"linear-gradient(90deg, #f5b642, #d4942b)" },
+            INR: { bg:"#0d0a00", surface:"#1a1500", gold:"#ff9933", goldDark:"#ff6600", accent1:"#ff9933", accent2:"#138808", flagColors:"#ff9933, #ffffff, #138808", flagGradient:"linear-gradient(90deg, #ff9933 33%, #fff 33%, #fff 66%, #138808 66%)" },
+            USD: { bg:"#0a0a1a", surface:"#15152e", gold:"#3c8dbc", goldDark:"#c41e3a", accent1:"#3c8dbc", accent2:"#c41e3a", flagColors:"#3c8dbc, #fff, #c41e3a", flagGradient:"linear-gradient(90deg, #3c8dbc 33%, #fff 33%, #fff 66%, #c41e3a 66%)" },
+            GBP: { bg:"#0a0a1a", surface:"#15152e", gold:"#c41e3a", goldDark:"#3c8dbc", accent1:"#c41e3a", accent2:"#fff", flagColors:"#c41e3a, #fff, #3c8dbc", flagGradient:"linear-gradient(90deg, #c41e3a 33%, #fff 33%, #fff 66%, #3c8dbc 66%)" },
+            AUD: { bg:"#0a1a0a", surface:"#152a15", gold:"#00843d", goldDark:"#ffcd00", accent1:"#00843d", accent2:"#ffcd00", flagColors:"#00843d, #ffcd00", flagGradient:"linear-gradient(90deg, #00843d, #ffcd00)" },
+            PKR: { bg:"#0a1a0a", surface:"#152a15", gold:"#01411c", goldDark:"#fff", accent1:"#01411c", accent2:"#fff", flagColors:"#01411c, #fff", flagGradient:"linear-gradient(90deg, #01411c 70%, #fff 70%)" },
+            EUR_MC: { bg:"#0a0a1a", surface:"#15152e", gold:"#CE1126", goldDark:"#FFFFFF", accent1:"#CE1126", accent2:"#FFFFFF", flagColors:"#CE1126, #FFFFFF", flagGradient:"linear-gradient(90deg, #CE1126 50%, #FFFFFF 50%)" },
+            EUR_ES: { bg:"#0a0a1a", surface:"#15152e", gold:"#AA151B", goldDark:"#F1BF00", accent1:"#AA151B", accent2:"#F1BF00", flagColors:"#AA151B, #F1BF00", flagGradient:"linear-gradient(90deg, #AA151B 33%, #F1BF00 33%, #F1BF00 66%, #AA151B 66%)" }
+        };
+
+        function applyTheme(currencyCode) {
+            const theme = countryThemes[currencyCode] || countryThemes.DEFAULT;
+            const root = document.documentElement;
+            root.style.setProperty('--bg', theme.bg); root.style.setProperty('--surface', theme.surface);
+            root.style.setProperty('--gold', theme.gold); root.style.setProperty('--gold-dark', theme.goldDark);
+            root.style.setProperty('--accent1', theme.accent1); root.style.setProperty('--accent2', theme.accent2);
+            document.getElementById('flagStrip').style.background = theme.flagGradient;
+            document.body.style.background = `radial-gradient(circle at 20% 30%, ${theme.accent1}10 0%, transparent 50%), radial-gradient(circle at 80% 70%, ${theme.accent2}10 0%, transparent 50%), ${theme.bg}`;
         }
 
-        // ======================= STATE =======================
-        let balance = 0;
+        const translations = {
+            en: { settings:"Settings", bombs:"Bombs", cashout:"Cashout", start_bet:"START BET", you_lost:"YOU LOST", better_luck:"Better luck next time!", play_again:"PLAY AGAIN", players_bets:"📊 Players Bets", player:"Player", bet:"Bet", odds:"Odds", win_loss:"Win/Loss", profile:"Profile", username_placeholder:"Enter username", save_profile:"Save Profile", fiat_deposit:"Fiat Deposit", add_funds:"💰 Add Funds", insufficient:"Please add funds to play." },
+            hi: { settings:"सेटिंग्स", bombs:"बम", cashout:"कैशआउट", start_bet:"दांव लगाएं", you_lost:"आप हार गए", better_luck:"अगली बार किस्मत अच्छी हो!", play_again:"फिर से खेलें", players_bets:"📊 खिलाड़ियों की बेट", player:"खिलाड़ी", bet:"बेट", odds:"ऑड्स", win_loss:"जीत/हार", profile:"प्रोफ़ाइल", username_placeholder:"उपयोगकर्ता नाम दर्ज करें", save_profile:"प्रोफ़ाइल सहेजें", fiat_deposit:"फिएट जमा", add_funds:"💰 फंड जोड़ें", insufficient:"कृपया खेलने के लिए फंड जोड़ें।" },
+            ur: { settings:"ترتیبات", bombs:"بارودی سرنگیں", cashout:"نقدی", start_bet:"شرط لگائیں", you_lost:"آپ ہار گئے", better_luck:"اگلی بار قسمت اچھی ہوگی!", play_again:"دوبارہ کھیلیں", players_bets:"📊 کھلاڑیوں کی شرطیں", player:"کھلاڑی", bet:"شرط", odds:"مشکلات", win_loss:"جیت/ہار", profile:"پروفائل", username_placeholder:"صارف نام درج کریں", save_profile:"پروفائل محفوظ کریں", fiat_deposit:"فیاٹ جمع", add_funds:"💰 فنڈز شامل کریں", insufficient:"براہ کرم کھیلنے کے لئے فنڈز شامل کریں۔" },
+            ar: { settings:"الإعدادات", bombs:"قنابل", cashout:"سحب", start_bet:"ابدأ الرهان", you_lost:"لقد خسرت", better_luck:"حظ أوفر في المرة القادمة!", play_again:"العب مرة أخرى", players_bets:"📊 رهانات اللاعبين", player:"اللاعب", bet:"الرهان", odds:"الاحتمالات", win_loss:"ربح/خسارة", profile:"الملف الشخصي", username_placeholder:"أدخل اسم المستخدم", save_profile:"حفظ الملف الشخصي", fiat_deposit:"إيداع نقدي", add_funds:"💰 إضافة أموال", insufficient:"يرجى إضافة أموال للعب." },
+            es: { settings:"Ajustes", bombs:"Bombas", cashout:"Retirar", start_bet:"COMENZAR APUESTA", you_lost:"PERDISTE", better_luck:"¡Mejor suerte la próxima vez!", play_again:"JUGAR DE NUEVO", players_bets:"📊 Apuestas de jugadores", player:"Jugador", bet:"Apuesta", odds:"Cuotas", win_loss:"Ganancia/Pérdida", profile:"Perfil", username_placeholder:"Ingrese nombre de usuario", save_profile:"Guardar perfil", fiat_deposit:"Depósito Fiat", add_funds:"💰 Agregar fondos", insufficient:"Por favor agregue fondos para jugar." },
+            fr: { settings:"Paramètres", bombs:"Bombes", cashout:"Retirer", start_bet:"COMMENCER LE PARI", you_lost:"VOUS AVEZ PERDU", better_luck:"Meilleure chance la prochaine fois!", play_again:"JOUER À NOUVEAU", players_bets:"📊 Paris des joueurs", player:"Joueur", bet:"Mise", odds:"Cotes", win_loss:"Gain/Perte", profile:"Profil", username_placeholder:"Entrez le nom d'utilisateur", save_profile:"Enregistrer le profil", fiat_deposit:"Dépôt Fiat", add_funds:"💰 Ajouter des fonds", insufficient:"Veuillez ajouter des fonds pour jouer." }
+        };
+
+        const supportedCurrencies = [
+            { code:"DEFAULT", flag:"🌐", name:"Default (USDT)", symbol:"USDT", base:"USD" },
+            { code:"USD", flag:"🇺🇸", name:"US Dollar", symbol:"$", base:"USD" },
+            { code:"GBP", flag:"🇬🇧", name:"British Pound", symbol:"£", base:"GBP" },
+            { code:"AUD", flag:"🇦🇺", name:"Australian Dollar", symbol:"A$", base:"AUD" },
+            { code:"INR", flag:"🇮🇳", name:"Indian Rupee", symbol:"₹", base:"INR" },
+            { code:"PKR", flag:"🇵🇰", name:"Pakistani Rupee", symbol:"₨", base:"PKR" },
+            { code:"EUR_MC", flag:"🇲🇨", name:"Euro (Monaco)", symbol:"€", base:"EUR" },
+            { code:"EUR_ES", flag:"🇪🇸", name:"Euro (Spain)", symbol:"€", base:"EUR" }
+        ];
+
+        const supportedLanguages = [
+            { code:"en", flag:"🇺🇸", name:"English (US)" },
+            { code:"hi", flag:"🇮🇳", name:"हिन्दी" },
+            { code:"ur", flag:"🇵🇰", name:"اردو" },
+            { code:"es", flag:"🇪🇸", name:"Español" },
+            { code:"fr", flag:"🇲🇨", name:"Français" }
+        ];
+
+        const indianNames = ["Aarav","Vivaan","Aditya","Vihaan","Arjun","Sai","Reyansh","Krishna","Ayaan","Ishaan","Shaurya","Atharv","Dhruv","Kabir","Rudra","Kartik","Rohan","Aryan","Dev","Mohammed","Ananya","Diya","Prisha","Aadhya","Saanvi","Anika","Pari","Myra","Ira","Kiara","Siya","Riya","Tanvi","Avni","Aarohi","Anvi","Jiya","Navya","Shanaya","Vanya","Tara","Meera","Sara","Ishita","Lavanya","Raj","Rahul","Vikram","Siddharth","Manish","Nitin","Deepak","Sunil","Suresh","Rajesh","Mahesh","Rakesh","Dinesh","Prakash","Anil","Vijay","Sanjay","Ajay","Abhishek","Amit","Pradeep","Sachin","Gaurav","Kunal","Rohit","Akshay","Naveen","Tarun","Vivek","Neha","Pooja","Shweta","Kavita","Rashmi","Nisha","Sunita","Anjali","Preeti","Ritu","Smita","Komal","Mona","Sonali","Kajal","Madhuri","Shilpa","Raveena","Karishma","Priyanka","Deepika","Alia","Radhika","Suhana","Kiara","Nora"];
+        const americanNames = ["James","John","Robert","Michael","William","David","Richard","Joseph","Thomas","Charles","Christopher","Daniel","Matthew","Anthony","Mark","Donald","Steven","Paul","Andrew","Joshua","Kenneth","Kevin","Brian","George","Timothy","Ronald","Edward","Jason","Jeffrey","Ryan","Jacob","Gary","Nicholas","Eric","Jonathan","Stephen","Larry","Justin","Scott","Brandon","Benjamin","Samuel","Raymond","Gregory","Frank","Alexander","Patrick","Jack","Dennis","Jerry","Tyler","Aaron","Jose","Adam","Nathan","Mary","Patricia","Jennifer","Linda","Barbara","Elizabeth","Susan","Jessica","Sarah","Karen","Lisa","Nancy","Betty","Margaret","Sandra","Ashley","Dorothy","Kimberly","Emily","Donna","Michelle","Carol","Amanda","Melissa","Deborah","Stephanie","Rebecca","Sharon","Laura","Cynthia","Kathleen","Amy","Angela","Shirley","Anna","Brenda","Pamela","Emma","Nicole","Helen","Samantha","Katherine","Christine","Debra","Rachel","Carolyn","Janet","Catherine","Maria","Heather","Diane"];
+        const britishNames = ["James","John","William","George","Thomas","Charles","Arthur","Frederick","Albert","Edward","Henry","David","Michael","Elizabeth","Victoria","Mary","Margaret","Anne","Catherine","Sarah","Emily","Charlotte","Amelia","Harper","Evelyn","Abigail","Ella","Avery","Sofia","Camila","Aria","Scarlett","Victoria","Madison","Luna","Grace","Chloe","Penelope","Layla","Riley","Zoey","Nora","Lily","Eleanor","Hannah","Lillian","Addison","Aubrey","Ellie","Stella","Natalie","Zoe","Leah","Hazel","Violet","Aurora","Savannah","Audrey","Brooklyn","Bella","Claire","Skylar","Lucy","Paisley","Everly","Anna","Caroline","Nova","Genesis","Emilia","Kennedy","Samantha","Maya","Willow","Kinsley","Naomi","Aaliyah","Elena","Sarah","Ariana","Allison","Gabriella","Alice","Madelyn","Cora","Ruby","Eva","Serenity","Autumn","Adeline","Hailey","Gianna","Valentina","Isla","Eliana","Quinn","Nevaeh","Ivy","Sadie","Piper","Lydia","Alexa","Josephine","Emery","Julia","Delilah","Arianna","Vivian","Kaylee","Sophie","Brielle","Madeline","Peyton","Rylee","Clara","Hadley","Melanie","Mackenzie","Reagan","Adalynn","Liliana","Aubree","Jade","Katherine"];
+        const australianNames = ["Jack","William","Oliver","Noah","Leo","Lucas","Henry","Charlie","Thomas","Liam","James","Ethan","Alexander","Max","Harrison","Samuel","Jacob","Ryan","Matthew","Nicholas","Charlotte","Amelia","Olivia","Mia","Ava","Isla","Grace","Chloe","Zoe","Sophie","Ella","Matilda","Ruby","Emily","Sienna","Lily","Ivy","Harper","Evie","Mackenzie","Aria","Scarlett","Victoria","Luna","Savannah","Audrey","Brooklyn","Bella","Claire","Skylar","Lucy","Paisley","Everly","Anna","Caroline","Nova","Genesis","Emilia","Kennedy","Samantha","Maya","Willow","Kinsley","Naomi","Aaliyah","Elena","Sarah","Ariana","Allison","Gabriella","Alice","Madelyn","Cora","Ruby","Eva","Serenity","Autumn","Adeline","Hailey","Gianna","Valentina","Isla","Eliana","Quinn","Nevaeh","Ivy","Sadie","Piper","Lydia","Alexa","Josephine","Emery","Julia","Delilah","Arianna","Vivian","Kaylee","Sophie","Brielle","Madeline","Peyton","Rylee","Clara","Hadley"];
+        const pakistaniNames = ["Omar","Ahmed","Ali","Hassan","Hussein","Mohamed","Youssef","Khaled","Tarek","Mustafa","Ibrahim","Abdullah","Salman","Fahad","Majed","Nasser","Saeed","Adel","Bilal","Hamza","Zaid","Yahya","Karim","Rashid","Samir","Tamer","Walid","Fadi","Hadi","Jad","Layth","Mazin","Nabil","Osama","Rami","Saif","Yasser","Aisha","Fatima","Noura","Layla","Mona","Huda","Samira","Yasmin","Dalia","Rania","Hana","Reem","Suha","Amal","Habiba","Nadia","Leila","Salma","Zeina","Nada","Jumana","Rasha","Maha","Hala","Sahar","Lina","Dana","Mira","Farah","Noor","Alaa","Rawan","Sana","May","Laila","Bushra","Souad","Asma","Khadeeja","Mariam","Aya","Ruba","Shireen","Raj","Rahul","Vikram","Siddharth","Manish","Nitin","Deepak","Sunil","Suresh","Rajesh","Mahesh","Rakesh","Dinesh","Prakash","Anil","Vijay","Sanjay","Ajay","Abhishek","Amit"];
+        const monacoNames = ["Charlotte","Amelia","Harper","Evelyn","Abigail","Emily","Ella","Avery","Sofia","Camila","Aria","Scarlett","Victoria","Madison","Luna","Grace","Chloe","Penelope","Layla","Riley","Zoey","Nora","Lily","Eleanor","Hannah","Lillian","Addison","Aubrey","Ellie","Stella","Natalie","Zoe","Leah","Hazel","Violet","Aurora","Savannah","Audrey","Brooklyn","Bella","Claire","Skylar","Lucy","Paisley","Everly","Anna","Caroline","Nova","Genesis","Emilia","Kennedy","Samantha","Maya","Willow","Kinsley","Naomi","Aaliyah","Elena","Sarah","Ariana","Allison","Gabriella","Alice","Madelyn","Cora","Ruby","Eva","Serenity","Autumn","Adeline","Hailey","Gianna","Valentina","Isla","Eliana","Quinn","Nevaeh","Ivy","Sadie","Piper","Lydia","Alexa","Josephine","Emery","Julia","Delilah","Arianna","Vivian","Kaylee","Sophie","Brielle","Madeline","Peyton","Rylee","Clara","Hadley"];
+        const spainNames = ["Jose","Juan","Carlos","Miguel","Alejandro","Javier","Pablo","Daniel","David","Sergio","Maria","Carmen","Ana","Isabel","Laura","Sofia","Valentina","Isabella","Camila","Aria","Scarlett","Victoria","Madison","Luna","Grace","Chloe","Penelope","Layla","Riley","Zoey","Nora","Lily","Eleanor","Hannah","Lillian","Addison","Aubrey","Ellie","Stella","Natalie","Zoe","Leah","Hazel","Violet","Aurora","Savannah","Audrey","Brooklyn","Bella","Claire","Skylar","Lucy","Paisley","Everly","Anna","Caroline","Nova","Genesis","Emilia","Kennedy","Samantha","Maya","Willow","Kinsley","Naomi","Aaliyah","Elena","Sarah","Ariana","Allison","Gabriella","Alice","Madelyn","Cora","Ruby","Eva","Serenity","Autumn","Adeline","Hailey","Gianna","Valentina","Isla","Eliana","Quinn","Nevaeh","Ivy","Sadie","Piper","Lydia","Alexa","Josephine","Emery","Julia","Delilah","Arianna","Vivian","Kaylee","Sophie","Brielle","Madeline","Peyton","Rylee","Clara","Hadley"];
+
+        function getNamePool() {
+            if (displayCurrency === "INR") return indianNames;
+            if (displayCurrency === "USD") return americanNames;
+            if (displayCurrency === "GBP") return britishNames;
+            if (displayCurrency === "AUD") return australianNames;
+            if (displayCurrency === "PKR") return pakistaniNames;
+            if (displayCurrency === "EUR_MC") return monacoNames;
+            if (displayCurrency === "EUR_ES") return spainNames;
+            return [...new Set([...indianNames,...americanNames,...britishNames,...australianNames,...pakistaniNames,...monacoNames,...spainNames])];
+        }
+
+        async function fetchExchangeRates() {
+            try { const resp = await fetch("https://api.exchangerate-api.com/v4/latest/USD"); const data = await resp.json(); exchangeRates = data.rates; exchangeRates["USD"] = 1; } catch(e) {}
+        }
+        function getCurrencyInfo(code) { return supportedCurrencies.find(c => c.code === code) || supportedCurrencies[0]; }
+        function getCurrentBalance() { return balances[displayCurrency] || 0; }
+        function setCurrentBalance(amount) { balances[displayCurrency] = amount; updateBalance(); }
+
+        // Returns the local minimum bet equivalent to MIN_BET_USDT
+        function getMinBetLocal() {
+            if (displayCurrency === "DEFAULT") return MIN_BET_USDT;
+            const info = getCurrencyInfo(displayCurrency);
+            const rate = exchangeRates[info.base || displayCurrency] || 1;
+            return MIN_BET_USDT * rate;
+        }
+
+        function updateBalanceDisplay() {
+            const amount = getCurrentBalance().toFixed(2);
+            document.getElementById('balanceDisplay').textContent = amount;
+            const info = getCurrencyInfo(displayCurrency);
+            document.getElementById('currencySymbol').textContent = info.symbol;
+            if (displayCurrency === "DEFAULT") {
+                document.getElementById('betLabel').textContent = `AMOUNT BET (MIN 10 USDT)`;
+                document.getElementById('usdtWalletBar').style.display = 'flex';
+                document.getElementById('usdtWalletContent').classList.remove('open');
+                document.getElementById('usdtWalletContent').style.display = 'none';
+            } else {
+                const minBetLocal = getMinBetLocal().toFixed(2);
+                document.getElementById('betLabel').textContent = `AMOUNT BET (MIN ${minBetLocal} ${info.symbol})`;
+                document.getElementById('usdtWalletBar').style.display = 'none';
+                document.getElementById('usdtWalletContent').style.display = 'none';
+                document.getElementById('usdtWalletContent').classList.remove('open');
+            }
+            applyTheme(displayCurrency);
+        }
+        function applyTranslations() {
+            const t = translations[userLanguage] || translations.en;
+            document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if (t[key]) el.textContent = t[key]; });
+        }
+
+        function buildCurrencyList() {
+            const container = document.getElementById('currencyList');
+            container.innerHTML = '';
+            supportedCurrencies.forEach(c => {
+                const div = document.createElement('div'); div.className = 'dropdown-item';
+                div.innerHTML = `${c.flag} ${c.name} (${c.symbol})`;
+                div.onclick = () => selectCurrency(c.code);
+                container.appendChild(div);
+            });
+            const selected = getCurrencyInfo(displayCurrency);
+            document.getElementById('selectedCurrencyFlag').textContent = selected.flag;
+            document.getElementById('selectedCurrencyName').textContent = selected.name;
+        }
+        function selectCurrency(code) {
+            displayCurrency = code;
+            updateBalanceDisplay();
+            buildCurrencyList();
+            buildLangList();
+            document.getElementById('currencyDropdown').style.display = 'none';
+            generateHistoryRow();
+        }
+        function filterCurrency() {
+            const input = document.getElementById('currencySearch').value.toLowerCase();
+            document.querySelectorAll('#currencyList .dropdown-item').forEach(item => { item.style.display = item.textContent.toLowerCase().includes(input) ? 'flex' : 'none'; });
+        }
+        function toggleDropdown(id) { const el = document.getElementById(id); el.style.display = el.style.display === 'block' ? 'none' : 'block'; }
+
+        function buildLangList() {
+            const container = document.getElementById('langList'); container.innerHTML = '';
+            supportedLanguages.forEach(l => {
+                const div = document.createElement('div'); div.className = 'dropdown-item';
+                div.innerHTML = `${l.flag} ${l.name}`;
+                div.onclick = () => selectLang(l.code, l.flag, l.name);
+                container.appendChild(div);
+            });
+            const selected = supportedLanguages.find(l => l.code === userLanguage);
+            if (selected) { document.getElementById('selectedLangFlag').textContent = selected.flag; document.getElementById('selectedLangName').textContent = selected.name; }
+        }
+        function selectLang(code, flag, name) { userLanguage = code; applyTranslations(); document.getElementById('selectedLangFlag').textContent = flag; document.getElementById('selectedLangName').textContent = name; document.getElementById('langDropdown').style.display = 'none'; }
+        function filterLang() {
+            const input = document.getElementById('langSearch').value.toLowerCase();
+            document.querySelectorAll('#langList .dropdown-item').forEach(item => { item.style.display = item.textContent.toLowerCase().includes(input) ? 'flex' : 'none'; });
+        }
+
+        function toggleUSDTWallet() {
+            const content = document.getElementById('usdtWalletContent');
+            if (content.classList.contains('open')) {
+                content.classList.remove('open');
+                setTimeout(() => { content.style.display = 'none'; }, 400);
+            } else {
+                content.style.display = 'block';
+                setTimeout(() => content.classList.add('open'), 10);
+            }
+        }
+        function copyWalletAddress() {
+            const text = OWNER_WALLET;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => alert('Address copied!')).catch(() => fallbackCopy(text));
+            } else { fallbackCopy(text); }
+        }
+        function fallbackCopy(text) {
+            const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+            document.execCommand('copy'); document.body.removeChild(ta); alert('Address copied!');
+        }
+
+        // ======================= WITHDRAWAL (UPDATED FOR PER-CURRENCY BALANCE) =======================
+        function openWithdrawModal() {
+            document.getElementById('withdrawOverlay').classList.add('active');
+            document.getElementById('withdrawStep1').style.display = 'block';
+            document.getElementById('withdrawStep2').style.display = 'none';
+            document.getElementById('withdrawStep3').style.display = 'none';
+            document.getElementById('withdrawStep4').style.display = 'none';
+            document.getElementById('withdrawError1').textContent = '';
+            document.getElementById('withdrawError2').textContent = '';
+            document.getElementById('withdrawCurrency').textContent = getCurrencyInfo(displayCurrency).symbol;
+            document.getElementById('withdrawAmountInput').value = '';
+        }
+        function closeWithdrawModal() { document.getElementById('withdrawOverlay').classList.remove('active'); }
+
+        function processWithdrawStep1() {
+            const amount = parseFloat(document.getElementById('withdrawAmountInput').value);
+            const bal = getCurrentBalance();
+            if (isNaN(amount) || amount <= 0) { document.getElementById('withdrawError1').textContent = 'Enter a valid amount.'; return; }
+            if (amount > bal) { document.getElementById('withdrawError1').textContent = `Insufficient balance. You have ${bal.toFixed(2)} ${getCurrencyInfo(displayCurrency).symbol}.`; return; }
+
+            // Show appropriate step2 fields
+            if (displayCurrency === "DEFAULT") {
+                document.getElementById('usdtWithdrawFields').style.display = 'block';
+                document.getElementById('phoneWithdrawFields').style.display = 'none';
+            } else {
+                document.getElementById('usdtWithdrawFields').style.display = 'none';
+                document.getElementById('phoneWithdrawFields').style.display = 'block';
+                const config = countryPhoneConfig[displayCurrency] || countryPhoneConfig.DEFAULT;
+                document.getElementById('countryCodeLabel').textContent = config.code;
+                document.getElementById('phoneInput').value = '';
+                document.getElementById('phoneCurrencyCaution').textContent = getCurrencyInfo(displayCurrency).symbol;
+            }
+            document.getElementById('withdrawStep1').style.display = 'none';
+            document.getElementById('withdrawStep2').style.display = 'block';
+        }
+
+        function processWithdrawStep2() {
+            let valid = true;
+            if (displayCurrency === "DEFAULT") {
+                const addr = document.getElementById('withdrawAddressInput').value.trim();
+                if (!addr.startsWith('0x') || addr.length !== 42) {
+                    document.getElementById('withdrawError2').textContent = 'Invalid BSC address.';
+                    valid = false;
+                }
+            } else {
+                const phone = document.getElementById('phoneInput').value.trim();
+                const config = countryPhoneConfig[displayCurrency] || countryPhoneConfig.DEFAULT;
+                const digits = phone.replace(/\D/g, '');
+                if (digits.length !== config.len) {
+                    document.getElementById('withdrawError2').textContent = `Invalid phone number. Must be ${config.len} digits.`;
+                    valid = false;
+                }
+            }
+            if (!valid) return;
+
+            // Deduct the amount from current currency balance (simulate withdrawal)
+            const amount = parseFloat(document.getElementById('withdrawAmountInput').value);
+            if (!isNaN(amount) && amount > 0) {
+                balances[displayCurrency] -= amount;
+                updateBalance();
+            }
+
+            document.getElementById('withdrawStep2').style.display = 'none';
+            document.getElementById('withdrawStep3').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('withdrawStep3').style.display = 'none';
+                document.getElementById('withdrawStep4').style.display = 'block';
+            }, 60000);
+        }
+
+        // ======================= DEPOSIT (UPDATED) =======================
+        function triggerFiatDeposit() {
+            const amount = prompt(`Enter amount in ${displayCurrency === "DEFAULT" ? "USDT" : displayCurrency} (min equivalent ${MIN_BET_USDT} USDT):`);
+            if (!amount) return;
+            const msgDiv = document.getElementById('fiatDepositMsg'); msgDiv.textContent = 'Creating payment link...'; msgDiv.className = 'message';
+            fetch('/api/payment/create-deposit', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ user_id:userId, amount:amount, currency:displayCurrency === "DEFAULT" ? "USD" : displayCurrency }) })
+            .then(res => res.json()).then(data => {
+                if (data.checkout_url) { window.open(data.checkout_url, '_blank'); msgDiv.textContent = 'Complete payment in the new tab. Checking status...'; pollPaymentStatus(data.invoice_id, msgDiv); }
+                else { msgDiv.textContent = 'Error: ' + (data.error || 'Unknown error'); msgDiv.className = 'message error'; }
+            }).catch(e => { msgDiv.textContent = 'Network error: ' + e.message; msgDiv.className = 'message error'; });
+        }
+        function pollPaymentStatus(orderId, msgDiv, retries = 60) {
+            const interval = setInterval(async () => {
+                try {
+                    const resp = await fetch(`/api/payment/check-status?order_id=${orderId}`); const data = await resp.json();
+                    if (data.status === 'finished') { clearInterval(interval); const paid = parseFloat(data.paid); if (!isNaN(paid) && paid > 0) { balances[displayCurrency] += paid; updateBalance(); msgDiv.textContent = `✅ Deposit successful! +${paid.toFixed(2)} ${getCurrencyInfo(displayCurrency).symbol}`; msgDiv.className = 'message success'; } else { msgDiv.textContent = 'Payment completed but amount not valid.'; msgDiv.className = 'message error'; } }
+                    else if (data.status === 'expired' || data.status === 'failed') { clearInterval(interval); msgDiv.textContent = 'Payment failed or expired.'; msgDiv.className = 'message error'; }
+                } catch(e) { console.error(e); }
+                retries--; if (retries <= 0) { clearInterval(interval); msgDiv.textContent = 'Payment status check timed out.'; msgDiv.className = 'message error'; }
+            }, 5000);
+        }
+
+        const tg = window.Telegram.WebApp; tg.expand(); tg.ready();
+        const userId = tg.initDataUnsafe?.user?.id || 'demo_user';
+        const storage = {
+            async getItem(key) { if (tg.CloudStorage) { return new Promise((resolve) => { tg.CloudStorage.getItem(key, (err, value) => { if (value != null) resolve(value); else resolve(localStorage.getItem(key)); }); }); } else { return localStorage.getItem(key); } },
+            async setItem(key, value) { if (tg.CloudStorage) { return new Promise((resolve) => { tg.CloudStorage.setItem(key, value, (err, success) => { if (success) resolve(); else { localStorage.setItem(key, value); resolve(); } }); }); } else { localStorage.setItem(key, value); } }
+        };
+        function prefixedKey(field) { return `rkmines_${userId}_${field}`; }
+
         let bet = 0, minesCount = 3;
         let grid = [], revealed = [], bombSet = new Set();
         let gameActive = false, gemsFound = 0, multiplier = 1.0;
-
-        let userName = "Guest";
-        let userAvatar = "😊";
+        let userName = "Guest", userAvatar = "😊";
         const avatarOptions = ["🐱","🐶","🐸","🐼","🐨","🦊","🐯","🐻‍❄️","🐵","🦁"];
 
-        // 1000+ Mixed Names Pool (Indian, Arabic, American)
-        const playerNames = [
-            "James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Thomas",
-            "Charles", "Christopher", "Daniel", "Matthew", "Anthony", "Mark", "Donald", "Steven", "Paul",
-            "Andrew", "Joshua", "Kenneth", "Kevin", "Brian", "George", "Timothy", "Ronald", "Edward",
-            "Jason", "Jeffrey", "Ryan", "Jacob", "Gary", "Nicholas", "Eric", "Jonathan", "Stephen",
-            "Larry", "Justin", "Scott", "Brandon", "Benjamin", "Samuel", "Raymond", "Gregory", "Frank",
-            "Alexander", "Patrick", "Jack", "Dennis", "Jerry", "Tyler", "Aaron", "Jose", "Adam", "Nathan",
-            "Henry", "Douglas", "Zachary", "Peter", "Kyle", "Ethan", "Walter", "Noah", "Jeremy",
-            "Christian", "Keith", "Roger", "Terry", "Gerald", "Harold", "Sean", "Austin", "Carl",
-            "Arthur", "Lawrence", "Dylan", "Jesse", "Jordan", "Bryan", "Billy", "Joe", "Bruce", "Albert",
-            "Willie", "Gabriel", "Logan", "Alan", "Juan", "Wayne", "Roy", "Ralph", "Randy", "Eugene",
-            "Vincent", "Russell", "Elijah", "Louis", "Bobby", "Philip", "Johnny",
-            "Mary", "Patricia", "Jennifer", "Linda", "Barbara", "Elizabeth", "Susan", "Jessica", "Sarah",
-            "Karen", "Lisa", "Nancy", "Betty", "Margaret", "Sandra", "Ashley", "Dorothy", "Kimberly",
-            "Emily", "Donna", "Michelle", "Carol", "Amanda", "Melissa", "Deborah", "Stephanie", "Rebecca",
-            "Sharon", "Laura", "Cynthia", "Kathleen", "Amy", "Angela", "Shirley", "Anna", "Brenda",
-            "Pamela", "Emma", "Nicole", "Helen", "Samantha", "Katherine", "Christine", "Debra", "Rachel",
-            "Carolyn", "Janet", "Catherine", "Maria", "Heather", "Diane",
-            "Aarav", "Vivaan", "Aditya", "Vihaan", "Arjun", "Sai", "Reyansh", "Krishna", "Ayaan",
-            "Ishaan", "Shaurya", "Atharv", "Dhruv", "Kabir", "Rudra", "Kartik", "Rohan", "Aryan",
-            "Dev", "Mohammed", "Ananya", "Diya", "Prisha", "Aadhya", "Saanvi", "Anika", "Pari",
-            "Myra", "Ira", "Kiara", "Siya", "Riya", "Tanvi", "Avni", "Aarohi", "Anvi", "Jiya",
-            "Navya", "Shanaya", "Vanya", "Tara", "Meera", "Sara", "Ishita", "Lavanya",
-            "Raj", "Rahul", "Vikram", "Siddharth", "Manish", "Nitin", "Deepak", "Sunil", "Suresh",
-            "Rajesh", "Mahesh", "Rakesh", "Dinesh", "Prakash", "Anil", "Vijay", "Sanjay", "Ajay",
-            "Abhishek", "Amit", "Pradeep", "Sachin", "Gaurav", "Kunal", "Rohit", "Akshay",
-            "Naveen", "Tarun", "Vivek", "Neha", "Pooja", "Shweta", "Kavita", "Rashmi", "Nisha",
-            "Sunita", "Anjali", "Preeti", "Ritu", "Smita", "Komal", "Mona", "Sonali", "Kajal",
-            "Madhuri", "Shilpa", "Raveena", "Karishma", "Priyanka", "Deepika", "Alia", "Radhika",
-            "Suhana", "Kiara", "Nora",
-            "Omar", "Ahmed", "Ali", "Hassan", "Hussein", "Mohamed", "Youssef", "Khaled", "Tarek",
-            "Mustafa", "Ibrahim", "Abdullah", "Salman", "Fahad", "Majed", "Nasser", "Saeed", "Adel",
-            "Bilal", "Hamza", "Zaid", "Yahya", "Karim", "Rashid", "Samir", "Tamer", "Walid",
-            "Fadi", "Hadi", "Jad", "Layth", "Mazin", "Nabil", "Osama", "Rami", "Saif",
-            "Yasser", "Aisha", "Fatima", "Noura", "Layla", "Mona", "Huda", "Samira", "Yasmin",
-            "Dalia", "Rania", "Hana", "Reem", "Suha", "Amal", "Habiba", "Nadia", "Leila",
-            "Salma", "Zeina", "Nada", "Jumana", "Rasha", "Maha", "Hala", "Sahar", "Lina",
-            "Dana", "Mira", "Farah", "Noor", "Alaa", "Rawan", "Sana", "May", "Laila",
-            "Bushra", "Souad", "Asma", "Khadeeja", "Mariam", "Aya", "Ruba", "Shireen",
-            "Charlotte", "Amelia", "Harper", "Evelyn", "Abigail", "Emily", "Ella", "Avery",
-            "Sofia", "Camila", "Aria", "Scarlett", "Victoria", "Madison", "Luna", "Grace",
-            "Chloe", "Penelope", "Layla", "Riley", "Zoey", "Nora", "Lily", "Eleanor",
-            "Hannah", "Lillian", "Addison", "Aubrey", "Ellie", "Stella", "Natalie", "Zoe",
-            "Leah", "Hazel", "Violet", "Aurora", "Savannah", "Audrey", "Brooklyn", "Bella",
-            "Claire", "Skylar", "Lucy", "Paisley", "Everly", "Anna", "Caroline", "Nova",
-            "Genesis", "Emilia", "Kennedy", "Samantha", "Maya", "Willow", "Kinsley", "Naomi",
-            "Aaliyah", "Elena", "Sarah", "Ariana", "Allison", "Gabriella", "Alice", "Madelyn",
-            "Cora", "Ruby", "Eva", "Serenity", "Autumn", "Adeline", "Hailey", "Gianna",
-            "Valentina", "Isla", "Eliana", "Quinn", "Nevaeh", "Ivy", "Sadie", "Piper",
-            "Lydia", "Alexa", "Josephine", "Emery", "Julia", "Delilah", "Arianna", "Vivian",
-            "Kaylee", "Sophie", "Brielle", "Madeline", "Peyton", "Rylee", "Clara", "Hadley",
-            "Melanie", "Mackenzie", "Reagan", "Adalynn", "Liliana", "Aubree", "Jade", "Katherine",
-            "Ximena", "Isabelle", "Natalia", "Athena", "Maria", "Leilani", "Cecilia", "Alaina",
-            "Giselle", "Summer", "Valeria", "Reese", "Mila", "Tatum", "Brooke", "Paige",
-            "Miriam", "Fiona", "Gracie", "Juliette", "Rose", "Rebecca", "Michelle", "Ryleigh"
-        ];
-        const extendedNames = playerNames.concat(playerNames);
-        const extraNames = playerNames.slice(0, 400);
-        const fullNamePool = extendedNames.concat(extraNames);
+        const balanceEl = document.getElementById('balanceDisplay'), gridEl = document.getElementById('grid'), startBtn = document.getElementById('startBtn'), cashoutBtn = document.getElementById('cashoutBtn'), panelCashoutBtn = document.getElementById('panelCashoutBtn'), panelCashoutSection = document.getElementById('panelCashoutSection'), betInput = document.getElementById('betInput'), minesInput = document.getElementById('minesInput'), gameMsg = document.getElementById('gameMsg'), loseOverlay = document.getElementById('loseOverlay'), settingsPanel = document.getElementById('settingsPanel'), settingsBackdrop = document.getElementById('settingsBackdrop'), promoMsg = document.getElementById('promoMsg'), headerAvatar = document.getElementById('headerAvatar'), headerUsername = document.getElementById('headerUsername'), usernameInput = document.getElementById('usernameInput'), avatarGrid = document.getElementById('avatarGrid'), historyBody = document.getElementById('historyBody');
 
-        // DOM elements
-        const balanceEl = document.getElementById('balanceDisplay');
-        const gridEl = document.getElementById('grid');
-        const startBtn = document.getElementById('startBtn');
-        const cashoutBtn = document.getElementById('cashoutBtn');
-        const panelCashoutBtn = document.getElementById('panelCashoutBtn');
-        const panelCashoutSection = document.getElementById('panelCashoutSection');
-        const betInput = document.getElementById('betInput');
-        const minesInput = document.getElementById('minesInput');
-        const gameMsg = document.getElementById('gameMsg');
-        const loseOverlay = document.getElementById('loseOverlay');
-        const settingsPanel = document.getElementById('settingsPanel');
-        const settingsBackdrop = document.getElementById('settingsBackdrop');
-        const depositMsg = document.getElementById('depositMsg');
-        const withdrawMsg = document.getElementById('withdrawMsg');
-        const profileMsg = document.getElementById('profileMsg');
-        const promoMsg = document.getElementById('promoMsg');
-        const headerAvatar = document.getElementById('headerAvatar');
-        const headerUsername = document.getElementById('headerUsername');
-        const usernameInput = document.getElementById('usernameInput');
-        const avatarGrid = document.getElementById('avatarGrid');
-        const historyBody = document.getElementById('historyBody');
-
-        // ======================= LOAD PERSISTED DATA =======================
         async function loadStoredData() {
             try {
-                const storedBalance = await storage.getItem(prefixedKey('balance'));
-                if (storedBalance != null) {
-                    balance = parseFloat(storedBalance);
-                    if (isNaN(balance)) balance = 0;
+                // Load balances object
+                const storedBalances = await storage.getItem(prefixedKey('balances'));
+                if (storedBalances) {
+                    const parsed = JSON.parse(storedBalances);
+                    // Merge with defaults (in case new currencies added)
+                    balances = { ...balances, ...parsed };
                 }
-                updateBalance();
-
-                const storedName = await storage.getItem(prefixedKey('userName'));
-                if (storedName) userName = storedName;
-
-                const storedAvatar = await storage.getItem(prefixedKey('userAvatar'));
-                if (storedAvatar && avatarOptions.includes(storedAvatar)) {
-                    userAvatar = storedAvatar;
-                }
+                const storedName = await storage.getItem(prefixedKey('userName')); if (storedName) userName = storedName;
+                const storedAvatar = await storage.getItem(prefixedKey('userAvatar')); if (storedAvatar && avatarOptions.includes(storedAvatar)) userAvatar = storedAvatar;
             } catch(e) {}
-            updateProfileUI();
-            buildAvatarGrid();
+            updateProfileUI(); buildAvatarGrid();
+            updateBalanceDisplay();
         }
-
-        async function saveBalance() {
-            await storage.setItem(prefixedKey('balance'), balance.toString());
-        }
-
-        async function saveProfileData() {
-            await storage.setItem(prefixedKey('userName'), userName);
-            await storage.setItem(prefixedKey('userAvatar'), userAvatar);
-        }
-
+        async function saveBalances() { await storage.setItem(prefixedKey('balances'), JSON.stringify(balances)); }
+        async function saveProfileData() { await storage.setItem(prefixedKey('userName'), userName); await storage.setItem(prefixedKey('userAvatar'), userAvatar); }
         loadStoredData();
+        function updateBalance() { updateBalanceDisplay(); saveBalances(); }
+        function updateProfileUI() { headerAvatar.textContent = userAvatar; headerUsername.textContent = userName; usernameInput.value = userName; document.querySelectorAll('.avatar-option').forEach(el => { el.classList.toggle('selected', el.textContent === userAvatar); }); }
+        function buildAvatarGrid() { avatarGrid.innerHTML = ''; avatarOptions.forEach(emoji => { const div = document.createElement('div'); div.className = 'avatar-option' + (userAvatar === emoji ? ' selected' : ''); div.textContent = emoji; div.onclick = () => { userAvatar = emoji; updateProfileUI(); buildAvatarGrid(); }; avatarGrid.appendChild(div); }); }
+        function saveProfile() { userName = usernameInput.value.trim() || "Guest"; updateProfileUI(); saveProfileData(); document.getElementById('profileMsg').textContent = '✅ Profile saved!'; document.getElementById('profileMsg').className = 'message success'; setTimeout(() => document.getElementById('profileMsg').textContent = '', 2000); }
 
-        function updateBalance() {
-            balanceEl.textContent = balance.toFixed(2);
-            saveBalance();
-        }
-
-        // Profile UI
-        function buildAvatarGrid() {
-            avatarGrid.innerHTML = '';
-            avatarOptions.forEach(emoji => {
-                const div = document.createElement('div');
-                div.className = 'avatar-option' + (userAvatar === emoji ? ' selected' : '');
-                div.textContent = emoji;
-                div.addEventListener('click', () => {
-                    document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
-                    div.classList.add('selected');
-                    userAvatar = emoji;
-                });
-                avatarGrid.appendChild(div);
-            });
-        }
-
-        function saveProfile() {
-            userName = usernameInput.value.trim() || "Guest";
-            updateProfileUI();
-            saveProfileData();
-            profileMsg.textContent = '✅ Profile saved!';
-            profileMsg.className = 'message success';
-            setTimeout(() => { profileMsg.textContent = ''; }, 2000);
-        }
-
-        function updateProfileUI() {
-            headerAvatar.textContent = userAvatar;
-            headerUsername.textContent = userName;
-            usernameInput.value = userName;
-            document.querySelectorAll('.avatar-option').forEach(el => {
-                if (el.textContent === userAvatar) el.classList.add('selected');
-                else el.classList.remove('selected');
-            });
-        }
-
-        // ======================= GAME LOGIC =======================
-        function calcMultiplier(gems, mines) {
-            let prob = 1.0;
-            for (let i = 0; i < gems; i++) {
-                prob *= (TOTAL_CELLS - mines - i) / (TOTAL_CELLS - i);
-            }
-            return prob > 0 ? (1 / prob) * HOUSE_EDGE : 0;
-        }
-
+        function calcMultiplier(gems, mines) { let prob = 1.0; for (let i = 0; i < gems; i++) prob *= (TOTAL_CELLS - mines - i) / (TOTAL_CELLS - i); return prob > 0 ? (1 / prob) * HOUSE_EDGE : 0; }
         function drawGrid() {
             gridEl.innerHTML = '';
-            for (let i = 0; i < TOTAL_CELLS; i++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
-                if (revealed[i]) {
-                    cell.classList.add('revealed');
-                    if (bombSet.has(i)) {
-                        cell.classList.add('bomb');
-                        cell.textContent = '💣';
-                    } else {
-                        cell.classList.add('gem');
-                        cell.textContent = '💎';
-                    }
-                } else {
-                    cell.textContent = '?';
-                    if (gameActive) {
-                        cell.addEventListener('click', () => handleCellClick(i));
-                    }
-                }
-                gridEl.appendChild(cell);
-            }
+            for (let i = 0; i < TOTAL_CELLS; i++) { const cell = document.createElement('div'); cell.className = 'cell'; if (revealed[i]) { cell.classList.add('revealed'); cell.classList.add(bombSet.has(i) ? 'bomb' : 'gem'); cell.textContent = bombSet.has(i) ? '💣' : '💎'; } else { cell.textContent = '?'; if (gameActive) cell.addEventListener('click', () => handleCellClick(i)); } gridEl.appendChild(cell); }
         }
-
         function startGame() {
-            const betVal = parseFloat(betInput.value);
-            const minesVal = parseInt(minesInput.value);
-
-            if (isNaN(betVal) || betVal < MIN_BET) {
-                alert(`Minimum bet is ${MIN_BET} USDT`);
-                return;
-            }
-            if (isNaN(minesVal) || minesVal < 1 || minesVal > 15) {
-                alert('Bombs must be between 1-15');
-                return;
-            }
-            if (betVal > balance) {
-                alert('Insufficient balance!');
-                return;
-            }
-
-            bet = betVal;
-            minesCount = minesVal;
-            balance -= bet;
-            updateBalance();
-
-            gameActive = true;
-            gemsFound = 0;
-            multiplier = 1.0;
-            revealed = Array(TOTAL_CELLS).fill(false);
-            bombSet.clear();
-            while (bombSet.size < minesCount) {
-                bombSet.add(Math.floor(Math.random() * TOTAL_CELLS));
-            }
-
-            startBtn.disabled = true;
-            cashoutBtn.disabled = false;
-            panelCashoutSection.style.display = 'block';
-            panelCashoutBtn.disabled = false;
-            gameMsg.textContent = '';
-            drawGrid();
+            const balanceNow = getCurrentBalance();
+            if (balanceNow <= 0) { alert(translations[userLanguage]?.insufficient || "Please add funds to play."); triggerFiatDeposit(); return; }
+            const betVal = parseFloat(betInput.value), minesVal = parseInt(minesInput.value);
+            const minBetLocal = getMinBetLocal();
+            if (isNaN(betVal) || betVal < minBetLocal) { alert(`Minimum bet is ${minBetLocal.toFixed(2)} ${getCurrencyInfo(displayCurrency).symbol}`); return; }
+            if (isNaN(minesVal) || minesVal < 1 || minesVal > 15) { alert('Bombs must be between 1-15'); return; }
+            if (betVal > balanceNow) { alert('Insufficient balance!'); return; }
+            bet = betVal; minesCount = minesVal;
+            // Deduct from current currency balance
+            balances[displayCurrency] -= bet; updateBalance();
+            gameActive = true; gemsFound = 0; multiplier = 1.0; revealed = Array(TOTAL_CELLS).fill(false); bombSet.clear();
+            while (bombSet.size < minesCount) { bombSet.add(Math.floor(Math.random() * TOTAL_CELLS)); }
+            startBtn.disabled = true; cashoutBtn.disabled = false; panelCashoutSection.style.display = 'block'; panelCashoutBtn.disabled = false; gameMsg.textContent = ''; drawGrid();
         }
-
         function handleCellClick(index) {
-            if (!gameActive || revealed[index]) return;
-            revealed[index] = true;
-
-            if (bombSet.has(index)) {
-                gameActive = false;
-                bombSet.forEach(pos => revealed[pos] = true);
-                drawGrid();
-                document.body.classList.add('shake');
-                setTimeout(() => document.body.classList.remove('shake'), 500);
-                loseOverlay.classList.add('active');
-                startBtn.disabled = false;
-                cashoutBtn.disabled = true;
-                panelCashoutSection.style.display = 'none';
-                gameMsg.textContent = '';
-                return;
-            }
-
-            gemsFound++;
-            multiplier = calcMultiplier(gemsFound, minesCount);
-            drawGrid();
+            if (!gameActive || revealed[index]) return; revealed[index] = true;
+            if (bombSet.has(index)) { gameActive = false; bombSet.forEach(pos => revealed[pos] = true); drawGrid(); document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 500); loseOverlay.classList.add('active'); startBtn.disabled = false; cashoutBtn.disabled = true; panelCashoutSection.style.display = 'none'; gameMsg.textContent = ''; return; }
+            gemsFound++; multiplier = calcMultiplier(gemsFound, minesCount); drawGrid();
         }
+        function cashout() { if (!gameActive) return; gameActive = false; const winnings = bet * multiplier; balances[displayCurrency] += winnings; updateBalance(); for (let i = 0; i < TOTAL_CELLS; i++) { if (!bombSet.has(i)) revealed[i] = true; } drawGrid(); gameMsg.textContent = `✅ Cashed out! +${winnings.toFixed(2)} ${getCurrencyInfo(displayCurrency).symbol}`; gameMsg.className = 'message success'; startBtn.disabled = false; cashoutBtn.disabled = true; panelCashoutSection.style.display = 'none'; }
+        function closeOverlay() { loseOverlay.classList.remove('active'); drawGrid(); }
+        function openSettings() { settingsPanel.classList.add('open'); settingsBackdrop.classList.add('show'); }
+        function closeSettings(event) { if(event) event.stopPropagation(); settingsPanel.classList.remove('open'); settingsBackdrop.classList.remove('show'); }
 
-        function cashout() {
-            if (!gameActive) return;
-            gameActive = false;
-            const winnings = bet * multiplier;
-            balance += winnings;
-            updateBalance();
-            for (let i = 0; i < TOTAL_CELLS; i++) {
-                if (!bombSet.has(i)) revealed[i] = true;
-            }
-            drawGrid();
-            gameMsg.textContent = `✅ Cashed out! +${winnings.toFixed(2)} USDT`;
-            gameMsg.className = 'message success';
-            startBtn.disabled = false;
-            cashoutBtn.disabled = true;
-            panelCashoutSection.style.display = 'none';
-        }
-
-        function closeOverlay() {
-            loseOverlay.classList.remove('active');
-            drawGrid();
-        }
-
-        // ======================= SETTINGS PANEL =======================
-        function openSettings() {
-            settingsPanel.classList.add('open');
-            settingsBackdrop.classList.add('show');
-            document.body.style.overflow = 'hidden';
-        }
-        function closeSettings(event) {
-            if (event) event.stopPropagation();
-            settingsPanel.classList.remove('open');
-            settingsBackdrop.classList.remove('show');
-            document.body.style.overflow = '';
-        }
-
-        // ======================= COPY WALLET =======================
-        function copyWallet() {
-            const text = OWNER_WALLET;
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(() => alert('✅ Copied!')).catch(() => fallbackCopy(text));
-            } else {
-                fallbackCopy(text);
-            }
-        }
-        function fallbackCopy(text) {
-            const ta = document.createElement('textarea');
-            ta.value = text;
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
-            alert('✅ Copied!');
-        }
-
-        // ======================= DEPOSIT VERIFY =======================
-        async function verifyDeposit() {
-            const txHash = document.getElementById('txHashInput').value.trim();
-            if (!txHash) {
-                depositMsg.textContent = '❌ Enter TX Hash.';
-                depositMsg.className = 'message error';
-                return;
-            }
-            depositMsg.textContent = '⏳ Verifying...';
-            depositMsg.className = 'message';
-            try {
-                const url = `https://api.bscscan.com/api?module=proxy&action=eth_getTransactionByHash&txhash=${txHash}&apikey=${BSCSCAN_API_KEY}`;
-                const resp = await fetch(url);
-                const data = await resp.json();
-                if (!data.result) throw new Error('Not found');
-                const tx = data.result;
-                if (tx.to && tx.to.toLowerCase() !== USDT_CONTRACT) {
-                    depositMsg.textContent = '❌ Not USDT.';
-                    return;
-                }
-                const inp = tx.input;
-                if (inp.length < 138 || inp.slice(0,10) !== '0xa9059cbb') {
-                    depositMsg.textContent = '❌ Invalid transfer.';
-                    return;
-                }
-                const recipient = '0x' + inp.slice(34,74);
-                if (recipient.toLowerCase() !== OWNER_WALLET) {
-                    depositMsg.textContent = '❌ Not your wallet.';
-                    return;
-                }
-                const amt = parseInt(inp.slice(74,138), 16) / 1e18;
-                if (amt < MIN_DEPOSIT) {
-                    depositMsg.textContent = `❌ Minimum deposit is ${MIN_DEPOSIT} USDT.`;
-                    depositMsg.className = 'message error';
-                    return;
-                }
-                const recUrl = `https://api.bscscan.com/api?module=proxy&action=eth_getTransactionReceipt&txhash=${txHash}&apikey=${BSCSCAN_API_KEY}`;
-                const recResp = await fetch(recUrl);
-                const recData = await recResp.json();
-                if (recData.result?.status === '0x1') {
-                    balance += amt;
-                    updateBalance();
-                    depositMsg.textContent = `✅ +${amt.toFixed(2)} USDT deposited!`;
-                    depositMsg.className = 'message success';
-                    document.getElementById('txHashInput').value = '';
-                } else {
-                    depositMsg.textContent = '❌ Tx not confirmed.';
-                }
-            } catch(e) {
-                depositMsg.textContent = '⚠️ Error. Check Hash.';
-            }
-        }
-
-        // ======================= FAKE WITHDRAW =======================
-        function fakeWithdraw() {
-            const amt = parseFloat(document.getElementById('withdrawAmount').value);
-            const addr = document.getElementById('withdrawAddress').value.trim();
-            if (isNaN(amt) || amt <= 0) {
-                withdrawMsg.textContent = '❌ Invalid amount.';
-                return;
-            }
-            if (!addr.startsWith('0x') || addr.length !== 42) {
-                withdrawMsg.textContent = '❌ Invalid BSC address.';
-                return;
-            }
-            if (amt > balance) {
-                withdrawMsg.textContent = `❌ Insufficient balance (max ${balance.toFixed(2)}).`;
-                return;
-            }
-            withdrawMsg.textContent = '✅ Withdrawal request submitted successfully!';
-            withdrawMsg.className = 'message success';
-            document.getElementById('withdrawAmount').value = '';
-            document.getElementById('withdrawAddress').value = '';
-        }
-
-        // ======================= PROMO CODE =======================
         function applyPromo() {
             const code = document.getElementById('promoInput').value.trim().toUpperCase();
             if (code === 'RISHAVBHAGWANHAI' || code === 'RADHEYBHAGWANHAI') {
-                balance += 500;
-                updateBalance();
-                promoMsg.textContent = '✅ Promo applied! +500 USDT added.';
-                promoMsg.className = 'message success';
-                document.getElementById('promoInput').value = '';
-            } else {
-                promoMsg.textContent = '❌ Invalid promo code.';
-                promoMsg.className = 'message error';
-            }
+                const bonus = displayCurrency === "DEFAULT" ? 500 : (500 * (exchangeRates[(getCurrencyInfo(displayCurrency).base || displayCurrency)] || 1));
+                balances[displayCurrency] += bonus; updateBalance();
+                const info = getCurrencyInfo(displayCurrency);
+                promoMsg.textContent = `✅ Promo applied! +${bonus.toFixed(2)} ${info.symbol} added.`;
+                promoMsg.className = 'message success'; document.getElementById('promoInput').value = '';
+            } else { promoMsg.textContent = '❌ Invalid promo code.'; promoMsg.className = 'message error'; }
         }
 
-        // ======================= BETTING HISTORY (Live Updates) =======================
-        function getRandomBet() {
-            return (Math.floor(Math.random() * (5000 - 10 + 1)) + 10).toFixed(2);
-        }
-
-        function getRandomOdds() {
-            return (Math.random() * (5.0 - 1.1) + 1.1).toFixed(2);
-        }
-
+        function getRandomBet() { return (Math.floor(Math.random() * (5000 - 10 + 1)) + 10).toFixed(2); }
+        function getRandomOdds() { return (Math.random() * 4 + 1.1).toFixed(2); }
+        function getCurrencySymbolForHistory() { return displayCurrency === "DEFAULT" ? "USDT" : getCurrencyInfo(displayCurrency).symbol; }
         function generateHistoryRow() {
-            const shuffled = [...fullNamePool].sort(() => Math.random() - 0.5);
-            const chosenNames = shuffled.slice(0, 4);
-
-            const rows = [];
+            const pool = getNamePool(); const shuffled = [...pool].sort(() => Math.random() - 0.5); const chosenNames = shuffled.slice(0, 4);
+            const symbol = getCurrencySymbolForHistory(); const rows = [];
             for (let i = 0; i < 4; i++) {
-                const betAmount = getRandomBet();
-                const odds = getRandomOdds();
-                const isWin = Math.random() < 0.7;
+                const betAmount = getRandomBet(), odds = getRandomOdds(), isWin = Math.random() < 0.7;
                 const profit = isWin ? (betAmount * (odds - 1)).toFixed(2) : (-betAmount).toFixed(2);
-                const resultClass = isWin ? 'win-amount' : 'loss-amount';
-                const resultText = isWin ? `+${profit}` : `${profit}`;
-
-                rows.push(`
-                    <tr>
-                        <td>${chosenNames[i]}</td>
-                        <td>${betAmount} USDT</td>
-                        <td>${odds}x</td>
-                        <td class="${resultClass}">${resultText} USDT</td>
-                    </tr>
-                `);
+                const resultClass = isWin ? 'win-amount' : 'loss-amount', resultText = isWin ? `+${profit}` : `${profit}`;
+                rows.push(`<tr><td>${chosenNames[i]}</td><td>${betAmount} ${symbol}</td><td>${odds}x</td><td class="${resultClass}">${resultText} ${symbol}</td></tr>`);
             }
             historyBody.innerHTML = rows.join('');
         }
+        generateHistoryRow(); setInterval(generateHistoryRow, 15000);
 
-        generateHistoryRow();
-        setInterval(generateHistoryRow, 15000);
+        startBtn.addEventListener('click', startGame); cashoutBtn.addEventListener('click', cashout); panelCashoutBtn.addEventListener('click', cashout);
 
-        // ======================= EVENT LISTENERS =======================
-        startBtn.addEventListener('click', startGame);
-        cashoutBtn.addEventListener('click', cashout);
-        panelCashoutBtn.addEventListener('click', cashout);
-        drawGrid();
+        setTimeout(() => { document.getElementById('leftDoor').style.transform = 'translateX(-100%)'; document.getElementById('rightDoor').style.transform = 'translateX(100%)'; document.getElementById('splashText').style.opacity = '0'; setTimeout(() => { document.getElementById('splashOverlay').style.display = 'none'; }, 900); }, 2000);
+
+        window.onload = async () => { await fetchExchangeRates(); buildCurrencyList(); buildLangList(); applyTranslations(); drawGrid(); updateBalanceDisplay(); };
     </script>
 </body>
 </html>
