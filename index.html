@@ -352,8 +352,6 @@
         let userLanguage = "en";
 
         // ======================= PER-CURRENCY BALANCES =======================
-        // Initialise all supported currencies with 0.
-        // DEFAULT is USDT (base).
         let balances = {
             DEFAULT: 0,
             USD: 0,
@@ -444,9 +442,7 @@
         }
         function getCurrencyInfo(code) { return supportedCurrencies.find(c => c.code === code) || supportedCurrencies[0]; }
         function getCurrentBalance() { return balances[displayCurrency] || 0; }
-        function setCurrentBalance(amount) { balances[displayCurrency] = amount; updateBalance(); }
 
-        // Returns the local minimum bet equivalent to MIN_BET_USDT
         function getMinBetLocal() {
             if (displayCurrency === "DEFAULT") return MIN_BET_USDT;
             const info = getCurrencyInfo(displayCurrency);
@@ -473,6 +469,7 @@
             }
             applyTheme(displayCurrency);
         }
+
         function applyTranslations() {
             const t = translations[userLanguage] || translations.en;
             document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if (t[key]) el.textContent = t[key]; });
@@ -491,6 +488,7 @@
             document.getElementById('selectedCurrencyFlag').textContent = selected.flag;
             document.getElementById('selectedCurrencyName').textContent = selected.name;
         }
+
         function selectCurrency(code) {
             displayCurrency = code;
             updateBalanceDisplay();
@@ -499,6 +497,7 @@
             document.getElementById('currencyDropdown').style.display = 'none';
             generateHistoryRow();
         }
+
         function filterCurrency() {
             const input = document.getElementById('currencySearch').value.toLowerCase();
             document.querySelectorAll('#currencyList .dropdown-item').forEach(item => { item.style.display = item.textContent.toLowerCase().includes(input) ? 'flex' : 'none'; });
@@ -516,6 +515,7 @@
             const selected = supportedLanguages.find(l => l.code === userLanguage);
             if (selected) { document.getElementById('selectedLangFlag').textContent = selected.flag; document.getElementById('selectedLangName').textContent = selected.name; }
         }
+
         function selectLang(code, flag, name) { userLanguage = code; applyTranslations(); document.getElementById('selectedLangFlag').textContent = flag; document.getElementById('selectedLangName').textContent = name; document.getElementById('langDropdown').style.display = 'none'; }
         function filterLang() {
             const input = document.getElementById('langSearch').value.toLowerCase();
@@ -543,7 +543,78 @@
             document.execCommand('copy'); document.body.removeChild(ta); alert('Address copied!');
         }
 
-        // ======================= WITHDRAWAL (UPDATED FOR PER-CURRENCY BALANCE) =======================
+        // ======================= DEPOSIT VIA NOWPAYMENTS =======================
+        function triggerFiatDeposit() {
+            const currencySymbol = displayCurrency === "DEFAULT" ? "USDT" : getCurrencyInfo(displayCurrency).symbol;
+            const amount = prompt(`Enter amount in ${currencySymbol} (min equivalent ${MIN_BET_USDT} USDT):`);
+            if (!amount) return;
+            const msgDiv = document.getElementById('fiatDepositMsg');
+            msgDiv.textContent = 'Creating payment link...';
+            msgDiv.className = 'message';
+
+            // Map our internal currency to NOWPayments compatible code
+            let paymentCurrency = displayCurrency === "DEFAULT" ? "USD" : displayCurrency; // NOWPayments uses USD for USDT payments
+            fetch('/api/payment/create-deposit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: userId,
+                    amount: amount,
+                    currency: paymentCurrency
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.checkout_url) {
+                    window.open(data.checkout_url, '_blank');
+                    msgDiv.textContent = 'Complete payment in the new tab. Checking status...';
+                    pollPaymentStatus(data.invoice_id, msgDiv);
+                } else {
+                    msgDiv.textContent = 'Error: ' + (data.error || 'Unknown error');
+                    msgDiv.className = 'message error';
+                }
+            })
+            .catch(e => {
+                msgDiv.textContent = 'Network error: ' + e.message;
+                msgDiv.className = 'message error';
+            });
+        }
+
+        function pollPaymentStatus(orderId, msgDiv, retries = 60) {
+            const interval = setInterval(async () => {
+                try {
+                    const resp = await fetch(`/api/payment/check-status?invoice_id=${orderId}`);
+                    const data = await resp.json();
+                    if (data.status === 'finished') {
+                        clearInterval(interval);
+                        const paid = parseFloat(data.paid);
+                        if (!isNaN(paid) && paid > 0) {
+                            // Credit the current currency balance
+                            balances[displayCurrency] += paid;
+                            updateBalance();
+                            const sym = getCurrencyInfo(displayCurrency).symbol;
+                            msgDiv.textContent = `✅ Deposit successful! +${paid.toFixed(2)} ${sym}`;
+                            msgDiv.className = 'message success';
+                        } else {
+                            msgDiv.textContent = 'Payment completed but amount not valid.';
+                            msgDiv.className = 'message error';
+                        }
+                    } else if (data.status === 'expired' || data.status === 'failed') {
+                        clearInterval(interval);
+                        msgDiv.textContent = 'Payment failed or expired.';
+                        msgDiv.className = 'message error';
+                    }
+                } catch(e) { console.error(e); }
+                retries--;
+                if (retries <= 0) {
+                    clearInterval(interval);
+                    msgDiv.textContent = 'Payment status check timed out.';
+                    msgDiv.className = 'message error';
+                }
+            }, 5000);
+        }
+
+        // ======================= WITHDRAWAL =======================
         function openWithdrawModal() {
             document.getElementById('withdrawOverlay').classList.add('active');
             document.getElementById('withdrawStep1').style.display = 'block';
@@ -555,6 +626,7 @@
             document.getElementById('withdrawCurrency').textContent = getCurrencyInfo(displayCurrency).symbol;
             document.getElementById('withdrawAmountInput').value = '';
         }
+
         function closeWithdrawModal() { document.getElementById('withdrawOverlay').classList.remove('active'); }
 
         function processWithdrawStep1() {
@@ -563,7 +635,6 @@
             if (isNaN(amount) || amount <= 0) { document.getElementById('withdrawError1').textContent = 'Enter a valid amount.'; return; }
             if (amount > bal) { document.getElementById('withdrawError1').textContent = `Insufficient balance. You have ${bal.toFixed(2)} ${getCurrencyInfo(displayCurrency).symbol}.`; return; }
 
-            // Show appropriate step2 fields
             if (displayCurrency === "DEFAULT") {
                 document.getElementById('usdtWithdrawFields').style.display = 'block';
                 document.getElementById('phoneWithdrawFields').style.display = 'none';
@@ -598,7 +669,7 @@
             }
             if (!valid) return;
 
-            // Deduct the amount from current currency balance (simulate withdrawal)
+            // Deduct amount from current currency balance
             const amount = parseFloat(document.getElementById('withdrawAmountInput').value);
             if (!isNaN(amount) && amount > 0) {
                 balances[displayCurrency] -= amount;
@@ -613,36 +684,7 @@
             }, 60000);
         }
 
-        // ======================= DEPOSIT (UPDATED) =======================
-        function triggerFiatDeposit() {
-            const amount = prompt(`Enter amount in ${displayCurrency === "DEFAULT" ? "USDT" : displayCurrency} (min equivalent ${MIN_BET_USDT} USDT):`);
-            if (!amount) return;
-            const msgDiv = document.getElementById('fiatDepositMsg'); msgDiv.textContent = 'Creating payment link...'; msgDiv.className = 'message';
-            fetch('/api/payment/create-deposit', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ user_id:userId, amount:amount, currency:displayCurrency === "DEFAULT" ? "USD" : displayCurrency }) })
-            .then(res => res.json()).then(data => {
-                if (data.checkout_url) { window.open(data.checkout_url, '_blank'); msgDiv.textContent = 'Complete payment in the new tab. Checking status...'; pollPaymentStatus(data.invoice_id, msgDiv); }
-                else { msgDiv.textContent = 'Error: ' + (data.error || 'Unknown error'); msgDiv.className = 'message error'; }
-            }).catch(e => { msgDiv.textContent = 'Network error: ' + e.message; msgDiv.className = 'message error'; });
-        }
-        function pollPaymentStatus(orderId, msgDiv, retries = 60) {
-            const interval = setInterval(async () => {
-                try {
-                    const resp = await fetch(`/api/payment/check-status?order_id=${orderId}`); const data = await resp.json();
-                    if (data.status === 'finished') { clearInterval(interval); const paid = parseFloat(data.paid); if (!isNaN(paid) && paid > 0) { balances[displayCurrency] += paid; updateBalance(); msgDiv.textContent = `✅ Deposit successful! +${paid.toFixed(2)} ${getCurrencyInfo(displayCurrency).symbol}`; msgDiv.className = 'message success'; } else { msgDiv.textContent = 'Payment completed but amount not valid.'; msgDiv.className = 'message error'; } }
-                    else if (data.status === 'expired' || data.status === 'failed') { clearInterval(interval); msgDiv.textContent = 'Payment failed or expired.'; msgDiv.className = 'message error'; }
-                } catch(e) { console.error(e); }
-                retries--; if (retries <= 0) { clearInterval(interval); msgDiv.textContent = 'Payment status check timed out.'; msgDiv.className = 'message error'; }
-            }, 5000);
-        }
-
-        const tg = window.Telegram.WebApp; tg.expand(); tg.ready();
-        const userId = tg.initDataUnsafe?.user?.id || 'demo_user';
-        const storage = {
-            async getItem(key) { if (tg.CloudStorage) { return new Promise((resolve) => { tg.CloudStorage.getItem(key, (err, value) => { if (value != null) resolve(value); else resolve(localStorage.getItem(key)); }); }); } else { return localStorage.getItem(key); } },
-            async setItem(key, value) { if (tg.CloudStorage) { return new Promise((resolve) => { tg.CloudStorage.setItem(key, value, (err, success) => { if (success) resolve(); else { localStorage.setItem(key, value); resolve(); } }); }); } else { localStorage.setItem(key, value); } }
-        };
-        function prefixedKey(field) { return `rkmines_${userId}_${field}`; }
-
+        // ======================= GAME LOGIC =======================
         let bet = 0, minesCount = 3;
         let grid = [], revealed = [], bombSet = new Set();
         let gameActive = false, gemsFound = 0, multiplier = 1.0;
@@ -651,13 +693,20 @@
 
         const balanceEl = document.getElementById('balanceDisplay'), gridEl = document.getElementById('grid'), startBtn = document.getElementById('startBtn'), cashoutBtn = document.getElementById('cashoutBtn'), panelCashoutBtn = document.getElementById('panelCashoutBtn'), panelCashoutSection = document.getElementById('panelCashoutSection'), betInput = document.getElementById('betInput'), minesInput = document.getElementById('minesInput'), gameMsg = document.getElementById('gameMsg'), loseOverlay = document.getElementById('loseOverlay'), settingsPanel = document.getElementById('settingsPanel'), settingsBackdrop = document.getElementById('settingsBackdrop'), promoMsg = document.getElementById('promoMsg'), headerAvatar = document.getElementById('headerAvatar'), headerUsername = document.getElementById('headerUsername'), usernameInput = document.getElementById('usernameInput'), avatarGrid = document.getElementById('avatarGrid'), historyBody = document.getElementById('historyBody');
 
+        // Storage
+        const tg = window.Telegram.WebApp; tg.expand(); tg.ready();
+        const userId = tg.initDataUnsafe?.user?.id || 'demo_user';
+        const storage = {
+            async getItem(key) { if (tg.CloudStorage) { return new Promise((resolve) => { tg.CloudStorage.getItem(key, (err, value) => { if (value != null) resolve(value); else resolve(localStorage.getItem(key)); }); }); } else { return localStorage.getItem(key); } },
+            async setItem(key, value) { if (tg.CloudStorage) { return new Promise((resolve) => { tg.CloudStorage.setItem(key, value, (err, success) => { if (success) resolve(); else { localStorage.setItem(key, value); resolve(); } }); }); } else { localStorage.setItem(key, value); } }
+        };
+        function prefixedKey(field) { return `rkmines_${userId}_${field}`; }
+
         async function loadStoredData() {
             try {
-                // Load balances object
                 const storedBalances = await storage.getItem(prefixedKey('balances'));
                 if (storedBalances) {
                     const parsed = JSON.parse(storedBalances);
-                    // Merge with defaults (in case new currencies added)
                     balances = { ...balances, ...parsed };
                 }
                 const storedName = await storage.getItem(prefixedKey('userName')); if (storedName) userName = storedName;
@@ -666,6 +715,7 @@
             updateProfileUI(); buildAvatarGrid();
             updateBalanceDisplay();
         }
+
         async function saveBalances() { await storage.setItem(prefixedKey('balances'), JSON.stringify(balances)); }
         async function saveProfileData() { await storage.setItem(prefixedKey('userName'), userName); await storage.setItem(prefixedKey('userAvatar'), userAvatar); }
         loadStoredData();
@@ -679,6 +729,7 @@
             gridEl.innerHTML = '';
             for (let i = 0; i < TOTAL_CELLS; i++) { const cell = document.createElement('div'); cell.className = 'cell'; if (revealed[i]) { cell.classList.add('revealed'); cell.classList.add(bombSet.has(i) ? 'bomb' : 'gem'); cell.textContent = bombSet.has(i) ? '💣' : '💎'; } else { cell.textContent = '?'; if (gameActive) cell.addEventListener('click', () => handleCellClick(i)); } gridEl.appendChild(cell); }
         }
+
         function startGame() {
             const balanceNow = getCurrentBalance();
             if (balanceNow <= 0) { alert(translations[userLanguage]?.insufficient || "Please add funds to play."); triggerFiatDeposit(); return; }
@@ -688,17 +739,18 @@
             if (isNaN(minesVal) || minesVal < 1 || minesVal > 15) { alert('Bombs must be between 1-15'); return; }
             if (betVal > balanceNow) { alert('Insufficient balance!'); return; }
             bet = betVal; minesCount = minesVal;
-            // Deduct from current currency balance
             balances[displayCurrency] -= bet; updateBalance();
             gameActive = true; gemsFound = 0; multiplier = 1.0; revealed = Array(TOTAL_CELLS).fill(false); bombSet.clear();
             while (bombSet.size < minesCount) { bombSet.add(Math.floor(Math.random() * TOTAL_CELLS)); }
             startBtn.disabled = true; cashoutBtn.disabled = false; panelCashoutSection.style.display = 'block'; panelCashoutBtn.disabled = false; gameMsg.textContent = ''; drawGrid();
         }
+
         function handleCellClick(index) {
             if (!gameActive || revealed[index]) return; revealed[index] = true;
             if (bombSet.has(index)) { gameActive = false; bombSet.forEach(pos => revealed[pos] = true); drawGrid(); document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 500); loseOverlay.classList.add('active'); startBtn.disabled = false; cashoutBtn.disabled = true; panelCashoutSection.style.display = 'none'; gameMsg.textContent = ''; return; }
             gemsFound++; multiplier = calcMultiplier(gemsFound, minesCount); drawGrid();
         }
+
         function cashout() { if (!gameActive) return; gameActive = false; const winnings = bet * multiplier; balances[displayCurrency] += winnings; updateBalance(); for (let i = 0; i < TOTAL_CELLS; i++) { if (!bombSet.has(i)) revealed[i] = true; } drawGrid(); gameMsg.textContent = `✅ Cashed out! +${winnings.toFixed(2)} ${getCurrencyInfo(displayCurrency).symbol}`; gameMsg.className = 'message success'; startBtn.disabled = false; cashoutBtn.disabled = true; panelCashoutSection.style.display = 'none'; }
         function closeOverlay() { loseOverlay.classList.remove('active'); drawGrid(); }
         function openSettings() { settingsPanel.classList.add('open'); settingsBackdrop.classList.add('show'); }
@@ -733,6 +785,7 @@
 
         startBtn.addEventListener('click', startGame); cashoutBtn.addEventListener('click', cashout); panelCashoutBtn.addEventListener('click', cashout);
 
+        // Splash animation
         setTimeout(() => { document.getElementById('leftDoor').style.transform = 'translateX(-100%)'; document.getElementById('rightDoor').style.transform = 'translateX(100%)'; document.getElementById('splashText').style.opacity = '0'; setTimeout(() => { document.getElementById('splashOverlay').style.display = 'none'; }, 900); }, 2000);
 
         window.onload = async () => { await fetchExchangeRates(); buildCurrencyList(); buildLangList(); applyTranslations(); drawGrid(); updateBalanceDisplay(); };
