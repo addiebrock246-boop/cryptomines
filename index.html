@@ -559,8 +559,9 @@
                 body: JSON.stringify({
                     user_id: userId,
                     amount: amount,
-                    currency: paymentCurrency
-                })
+                    currency: paymentCurrency,
+                    is_fiat: displayCurrency !== "DEFAULT"   // ye line add kar
+                 })
             })
             .then(res => res.json())
             .then(data => {
