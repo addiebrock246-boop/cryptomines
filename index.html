@@ -348,7 +348,6 @@
         let userLanguage = "en";
         let pendingDepositAmount = 0; // user ke dwara daali gayi fiat amount
 
-        // Per-currency balances
         let balances = {
             DEFAULT: 0, USD: 0, GBP: 0, AUD: 0, INR: 0, PKR: 0, EUR_MC: 0, EUR_ES: 0
         };
@@ -360,14 +359,14 @@
         };
 
         const countryThemes = {
-            DEFAULT: { bg:"#0a0a1a", surface:"#15152e", gold:"#f5b642", goldDark:"#d4942b", accent1:"#f5b642", accent2:"#d4942b", flagColors:"#f5b642, #d4942b", flagGradient:"linear-gradient(90deg, #f5b642, #d4942b)" },
-            INR: { bg:"#0d0a00", surface:"#1a1500", gold:"#ff9933", goldDark:"#ff6600", accent1:"#ff9933", accent2:"#138808", flagColors:"#ff9933, #ffffff, #138808", flagGradient:"linear-gradient(90deg, #ff9933 33%, #fff 33%, #fff 66%, #138808 66%)" },
-            USD: { bg:"#0a0a1a", surface:"#15152e", gold:"#3c8dbc", goldDark:"#c41e3a", accent1:"#3c8dbc", accent2:"#c41e3a", flagColors:"#3c8dbc, #fff, #c41e3a", flagGradient:"linear-gradient(90deg, #3c8dbc 33%, #fff 33%, #fff 66%, #c41e3a 66%)" },
-            GBP: { bg:"#0a0a1a", surface:"#15152e", gold:"#c41e3a", goldDark:"#3c8dbc", accent1:"#c41e3a", accent2:"#fff", flagColors:"#c41e3a, #fff, #3c8dbc", flagGradient:"linear-gradient(90deg, #c41e3a 33%, #fff 33%, #fff 66%, #3c8dbc 66%)" },
-            AUD: { bg:"#0a1a0a", surface:"#152a15", gold:"#00843d", goldDark:"#ffcd00", accent1:"#00843d", accent2:"#ffcd00", flagColors:"#00843d, #ffcd00", flagGradient:"linear-gradient(90deg, #00843d, #ffcd00)" },
-            PKR: { bg:"#0a1a0a", surface:"#152a15", gold:"#01411c", goldDark:"#fff", accent1:"#01411c", accent2:"#fff", flagColors:"#01411c, #fff", flagGradient:"linear-gradient(90deg, #01411c 70%, #fff 70%)" },
-            EUR_MC: { bg:"#0a0a1a", surface:"#15152e", gold:"#CE1126", goldDark:"#FFFFFF", accent1:"#CE1126", accent2:"#FFFFFF", flagColors:"#CE1126, #FFFFFF", flagGradient:"linear-gradient(90deg, #CE1126 50%, #FFFFFF 50%)" },
-            EUR_ES: { bg:"#0a0a1a", surface:"#15152e", gold:"#AA151B", goldDark:"#F1BF00", accent1:"#AA151B", accent2:"#F1BF00", flagColors:"#AA151B, #F1BF00", flagGradient:"linear-gradient(90deg, #AA151B 33%, #F1BF00 33%, #F1BF00 66%, #AA151B 66%)" }
+            DEFAULT: { bg:"#0a0a1a", surface:"#15152e", gold:"#f5b642", goldDark:"#d4942b", accent1:"#f5b642", accent2:"#d4942b", flagGradient:"linear-gradient(90deg, #f5b642, #d4942b)" },
+            INR: { bg:"#0d0a00", surface:"#1a1500", gold:"#ff9933", goldDark:"#ff6600", accent1:"#ff9933", accent2:"#138808", flagGradient:"linear-gradient(90deg, #ff9933 33%, #fff 33%, #fff 66%, #138808 66%)" },
+            USD: { bg:"#0a0a1a", surface:"#15152e", gold:"#3c8dbc", goldDark:"#c41e3a", accent1:"#3c8dbc", accent2:"#c41e3a", flagGradient:"linear-gradient(90deg, #3c8dbc 33%, #fff 33%, #fff 66%, #c41e3a 66%)" },
+            GBP: { bg:"#0a0a1a", surface:"#15152e", gold:"#c41e3a", goldDark:"#3c8dbc", accent1:"#c41e3a", accent2:"#fff", flagGradient:"linear-gradient(90deg, #c41e3a 33%, #fff 33%, #fff 66%, #3c8dbc 66%)" },
+            AUD: { bg:"#0a1a0a", surface:"#152a15", gold:"#00843d", goldDark:"#ffcd00", accent1:"#00843d", accent2:"#ffcd00", flagGradient:"linear-gradient(90deg, #00843d, #ffcd00)" },
+            PKR: { bg:"#0a1a0a", surface:"#152a15", gold:"#01411c", goldDark:"#fff", accent1:"#01411c", accent2:"#fff", flagGradient:"linear-gradient(90deg, #01411c 70%, #fff 70%)" },
+            EUR_MC: { bg:"#0a0a1a", surface:"#15152e", gold:"#CE1126", goldDark:"#FFFFFF", accent1:"#CE1126", accent2:"#FFFFFF", flagGradient:"linear-gradient(90deg, #CE1126 50%, #FFFFFF 50%)" },
+            EUR_ES: { bg:"#0a0a1a", surface:"#15152e", gold:"#AA151B", goldDark:"#F1BF00", accent1:"#AA151B", accent2:"#F1BF00", flagGradient:"linear-gradient(90deg, #AA151B 33%, #F1BF00 33%, #F1BF00 66%, #AA151B 66%)" }
         };
 
         function applyTheme(currencyCode) {
@@ -560,8 +559,8 @@
                     user_id: userId,
                     amount: amount,
                     currency: paymentCurrency,
-                    is_fiat: displayCurrency !== "DEFAULT"   // ye line add kar
-                 })
+                    is_fiat: displayCurrency !== "DEFAULT"   // DEFAULT crypto, baaki sab fiat
+                })
             })
             .then(res => res.json())
             .then(data => {
@@ -579,38 +578,39 @@
                 msgDiv.className = 'message error';
             });
         }
-         function pollPaymentStatus(invoiceId, type, msgDiv, retries = 60) {
-    const interval = setInterval(async () => {
-        try {
-            const resp = await fetch(`/api/payment/check-status?invoice_id=${invoiceId}&type=${type}`);
-            const data = await resp.json();
-            if (data.status === 'finished') {
-                clearInterval(interval);
-                if (pendingDepositAmount > 0) {
-                    balances[displayCurrency] += pendingDepositAmount;
-                    updateBalance();
-                    const sym = getCurrencyInfo(displayCurrency).symbol;
-                    msgDiv.textContent = `✅ Deposit successful! +${pendingDepositAmount.toFixed(2)} ${sym}`;
-                    msgDiv.className = 'message success';
-                    pendingDepositAmount = 0;
-                } else {
-                    msgDiv.textContent = 'Payment received but amount missing.';
+
+        function pollPaymentStatus(invoiceId, type, msgDiv, retries = 60) {
+            const interval = setInterval(async () => {
+                try {
+                    const resp = await fetch(`/api/payment/check-status?invoice_id=${invoiceId}&type=${type}`);
+                    const data = await resp.json();
+                    if (data.status === 'finished') {
+                        clearInterval(interval);
+                        if (pendingDepositAmount > 0) {
+                            balances[displayCurrency] += pendingDepositAmount;
+                            updateBalance();
+                            const sym = getCurrencyInfo(displayCurrency).symbol;
+                            msgDiv.textContent = `✅ Deposit successful! +${pendingDepositAmount.toFixed(2)} ${sym}`;
+                            msgDiv.className = 'message success';
+                            pendingDepositAmount = 0;
+                        } else {
+                            msgDiv.textContent = 'Payment received but amount missing.';
+                            msgDiv.className = 'message error';
+                        }
+                    } else if (data.status === 'expired' || data.status === 'failed') {
+                        clearInterval(interval);
+                        msgDiv.textContent = 'Payment failed or expired.';
+                        msgDiv.className = 'message error';
+                    }
+                } catch(e) { console.error(e); }
+                retries--;
+                if (retries <= 0) {
+                    clearInterval(interval);
+                    msgDiv.textContent = 'Payment status check timed out.';
                     msgDiv.className = 'message error';
                 }
-            } else if (data.status === 'expired' || data.status === 'failed') {
-                clearInterval(interval);
-                msgDiv.textContent = 'Payment failed or expired.';
-                msgDiv.className = 'message error';
-            }
-        } catch(e) { console.error(e); }
-        retries--;
-        if (retries <= 0) {
-            clearInterval(interval);
-            msgDiv.textContent = 'Payment status check timed out.';
-            msgDiv.className = 'message error';
+            }, 5000);
         }
-    }, 5000);
-}
 
         // ======================= WITHDRAWAL =======================
         function openWithdrawModal() {
