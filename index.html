@@ -295,7 +295,6 @@
     <div class="withdraw-modal-overlay" id="withdrawOverlay">
         <div class="withdraw-modal">
             <h3>💸 Withdraw</h3>
-            <!-- Step 1: Amount -->
             <div id="withdrawStep1" style="display:block;">
                 <div class="withdraw-input">
                     <label>Amount (<span id="withdrawCurrency">USDT</span>)</label>
@@ -307,21 +306,20 @@
                 </div>
                 <div class="msg error" id="withdrawError1"></div>
             </div>
-            <!-- Step 2: USDT → Address | Others → Phone -->
             <div id="withdrawStep2" style="display:none;">
                 <div id="usdtWithdrawFields" style="display:none;">
                     <div class="withdraw-input">
                         <label>Your BSC (BEP20) USDT Address</label>
                         <input type="text" id="withdrawAddressInput" placeholder="0x...">
                     </div>
-                    <div class="caution-text">⚠️ Ensure correct network (BNB Smart Chain). Wrong network = permanent loss.</div>
+                    <div class="caution-text">⚠️ Ensure correct network (BNB Smart Chain).</div>
                 </div>
                 <div id="phoneWithdrawFields" style="display:none;">
                     <div class="withdraw-input">
                         <label>Phone Number (<span id="countryCodeLabel">+1</span>)</label>
                         <input type="tel" id="phoneInput" placeholder="Enter phone number">
                     </div>
-                    <div class="caution-text" id="phoneCaution">⚠️ Incorrect phone number may result in loss of your <span id="phoneCurrencyCaution">USDT</span>.</div>
+                    <div class="caution-text" id="phoneCaution">⚠️ Incorrect number may result in loss.</div>
                 </div>
                 <div class="btn-row">
                     <button class="btn btn-secondary" onclick="closeWithdrawModal()">Cancel</button>
@@ -329,14 +327,12 @@
                 </div>
                 <div class="msg error" id="withdrawError2"></div>
             </div>
-            <!-- Step 3: Waiting -->
             <div id="withdrawStep3" style="display:none; text-align:center;">
-                <p>⏳ Processing your withdrawal...</p>
+                <p>⏳ Processing...</p>
                 <p style="font-size:12px; color:var(--text-dim);">Please wait 1 minute</p>
             </div>
-            <!-- Step 4: Success -->
             <div id="withdrawStep4" style="display:none; text-align:center;">
-                <p class="message success">✅ Withdrawal request submitted successfully!</p>
+                <p class="message success">✅ Withdrawal request submitted!</p>
                 <button class="btn btn-primary" style="margin-top:16px;" onclick="closeWithdrawModal()">Close</button>
             </div>
         </div>
@@ -350,17 +346,11 @@
         let displayCurrency = "DEFAULT";
         let exchangeRates = { USD: 1 };
         let userLanguage = "en";
+        let pendingDepositAmount = 0; // user ke dwara daali gayi fiat amount
 
-        // ======================= PER-CURRENCY BALANCES =======================
+        // Per-currency balances
         let balances = {
-            DEFAULT: 0,
-            USD: 0,
-            GBP: 0,
-            AUD: 0,
-            INR: 0,
-            PKR: 0,
-            EUR_MC: 0,
-            EUR_ES: 0
+            DEFAULT: 0, USD: 0, GBP: 0, AUD: 0, INR: 0, PKR: 0, EUR_MC: 0, EUR_ES: 0
         };
 
         const countryPhoneConfig = {
@@ -544,71 +534,83 @@
         }
 
         // ======================= DEPOSIT VIA NOWPAYMENTS =======================
-function triggerFiatDeposit() {
-    // Always deposit USDT
-    const amount = prompt(`Enter amount in USDT (min ${MIN_BET_USDT} USDT):`);
-    if (!amount) return;
-    const msgDiv = document.getElementById('fiatDepositMsg');
-    msgDiv.textContent = 'Creating payment link...';
-    msgDiv.className = 'message';
+        function triggerFiatDeposit() {
+            const cur = getCurrencyInfo(displayCurrency);
+            const min = getMinBetLocal().toFixed(2);
+            const sym = cur.symbol;
+            const amountStr = prompt(`Enter amount in ${sym} (min ${min} ${sym}):`);
+            if (!amountStr) return;
+            const amount = parseFloat(amountStr);
+            if (isNaN(amount) || amount < getMinBetLocal()) {
+                alert(`Minimum deposit is ${min} ${sym}`);
+                return;
+            }
+            pendingDepositAmount = amount;
 
-    fetch('/api/payment/create-deposit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            user_id: userId,
-            amount: amount,
-            currency: "USD"   // Backend ko USD bhejna hai, wo USDT invoice banayega
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.checkout_url) {
-            window.open(data.checkout_url, '_blank');
-            msgDiv.textContent = 'Complete payment in new tab. Checking status...';
-            pollPaymentStatus(data.invoice_id, msgDiv);
-        } else {
-            msgDiv.textContent = 'Error: ' + (data.error || 'Unknown error');
-            msgDiv.className = 'message error';
-        }
-    })
-    .catch(e => {
-        msgDiv.textContent = 'Network error: ' + e.message;
-        msgDiv.className = 'message error';
-    });
-}
-function pollPaymentStatus(orderId, msgDiv, retries = 60) {
-    const interval = setInterval(async () => {
-        try {
-            const resp = await fetch(`/api/payment/check-status?invoice_id=${orderId}`);
-            const data = await resp.json();
-            if (data.status === 'finished') {
-                clearInterval(interval);
-                const paid = parseFloat(data.paid);
-                if (!isNaN(paid) && paid > 0) {
-                    // Always credit USDT (DEFAULT) balance
-                    balances.DEFAULT += paid;
-                    updateBalance();
-                    msgDiv.textContent = `✅ Deposit successful! +${paid.toFixed(2)} USDT`;
-                    msgDiv.className = 'message success';
+            const msgDiv = document.getElementById('fiatDepositMsg');
+            msgDiv.textContent = 'Creating payment link...';
+            msgDiv.className = 'message';
+
+            const paymentCurrency = displayCurrency === "DEFAULT" ? "USD" : displayCurrency;
+
+            fetch('/api/payment/create-deposit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: userId,
+                    amount: amount,
+                    currency: paymentCurrency
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.checkout_url) {
+                    window.open(data.checkout_url, '_blank');
+                    msgDiv.textContent = 'Complete payment in new tab. Checking...';
+                    pollPaymentStatus(data.invoice_id, msgDiv);
                 } else {
-                    msgDiv.textContent = 'Payment completed but amount not valid.';
+                    msgDiv.textContent = 'Error: ' + (data.error || 'Unknown error');
                     msgDiv.className = 'message error';
                 }
-            } else if (data.status === 'expired' || data.status === 'failed') {
-                clearInterval(interval);
-                msgDiv.textContent = 'Payment failed or expired.';
+            })
+            .catch(e => {
+                msgDiv.textContent = 'Network error: ' + e.message;
                 msgDiv.className = 'message error';
-            }
-        } catch(e) { console.error(e); }
-        retries--;
-        if (retries <= 0) {
-            clearInterval(interval);
-            msgDiv.textContent = 'Payment status check timed out.';
-            msgDiv.className = 'message error';
+            });
         }
-    }, 5000);
-}
+
+        function pollPaymentStatus(invoiceId, msgDiv, retries = 60) {
+            const interval = setInterval(async () => {
+                try {
+                    const resp = await fetch(`/api/payment/check-status?invoice_id=${invoiceId}`);
+                    const data = await resp.json();
+                    if (data.status === 'finished') {
+                        clearInterval(interval);
+                        if (pendingDepositAmount > 0) {
+                            balances[displayCurrency] += pendingDepositAmount;
+                            updateBalance();
+                            const sym = getCurrencyInfo(displayCurrency).symbol;
+                            msgDiv.textContent = `✅ Deposit successful! +${pendingDepositAmount.toFixed(2)} ${sym}`;
+                            msgDiv.className = 'message success';
+                            pendingDepositAmount = 0;
+                        } else {
+                            msgDiv.textContent = 'Payment received but amount missing.';
+                            msgDiv.className = 'message error';
+                        }
+                    } else if (data.status === 'expired' || data.status === 'failed') {
+                        clearInterval(interval);
+                        msgDiv.textContent = 'Payment failed or expired.';
+                        msgDiv.className = 'message error';
+                    }
+                } catch(e) { console.error(e); }
+                retries--;
+                if (retries <= 0) {
+                    clearInterval(interval);
+                    msgDiv.textContent = 'Payment status check timed out.';
+                    msgDiv.className = 'message error';
+                }
+            }, 5000);
+        }
 
         // ======================= WITHDRAWAL =======================
         function openWithdrawModal() {
@@ -665,7 +667,6 @@ function pollPaymentStatus(orderId, msgDiv, retries = 60) {
             }
             if (!valid) return;
 
-            // Deduct amount from current currency balance
             const amount = parseFloat(document.getElementById('withdrawAmountInput').value);
             if (!isNaN(amount) && amount > 0) {
                 balances[displayCurrency] -= amount;
@@ -689,7 +690,6 @@ function pollPaymentStatus(orderId, msgDiv, retries = 60) {
 
         const balanceEl = document.getElementById('balanceDisplay'), gridEl = document.getElementById('grid'), startBtn = document.getElementById('startBtn'), cashoutBtn = document.getElementById('cashoutBtn'), panelCashoutBtn = document.getElementById('panelCashoutBtn'), panelCashoutSection = document.getElementById('panelCashoutSection'), betInput = document.getElementById('betInput'), minesInput = document.getElementById('minesInput'), gameMsg = document.getElementById('gameMsg'), loseOverlay = document.getElementById('loseOverlay'), settingsPanel = document.getElementById('settingsPanel'), settingsBackdrop = document.getElementById('settingsBackdrop'), promoMsg = document.getElementById('promoMsg'), headerAvatar = document.getElementById('headerAvatar'), headerUsername = document.getElementById('headerUsername'), usernameInput = document.getElementById('usernameInput'), avatarGrid = document.getElementById('avatarGrid'), historyBody = document.getElementById('historyBody');
 
-        // Storage
         const tg = window.Telegram.WebApp; tg.expand(); tg.ready();
         const userId = tg.initDataUnsafe?.user?.id || 'demo_user';
         const storage = {
@@ -781,7 +781,6 @@ function pollPaymentStatus(orderId, msgDiv, retries = 60) {
 
         startBtn.addEventListener('click', startGame); cashoutBtn.addEventListener('click', cashout); panelCashoutBtn.addEventListener('click', cashout);
 
-        // Splash animation
         setTimeout(() => { document.getElementById('leftDoor').style.transform = 'translateX(-100%)'; document.getElementById('rightDoor').style.transform = 'translateX(100%)'; document.getElementById('splashText').style.opacity = '0'; setTimeout(() => { document.getElementById('splashOverlay').style.display = 'none'; }, 900); }, 2000);
 
         window.onload = async () => { await fetchExchangeRates(); buildCurrencyList(); buildLangList(); applyTranslations(); drawGrid(); updateBalanceDisplay(); };
