@@ -49,58 +49,6 @@
             80% { transform: translateX(7px); }
         }
 
-        /* ══════════════════════════════════════════
-           NEW SPLASH SCREEN WITH DOOR ANIMATION
-           ══════════════════════════════════════════ */
-        #splashOverlay {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            background: var(--bg);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .door {
-            position: absolute;
-            top: 0;
-            height: 100%;
-            background: var(--bg);
-            transition: transform 0.8s ease-in-out;
-        }
-        .left-door {
-            left: 0;
-            width: 50%;
-            transform: translateX(0);
-        }
-        .right-door {
-            right: 0;
-            width: 50%;
-            transform: translateX(0);
-        }
-        .left-door.open {
-            transform: translateX(-100%);
-        }
-        .right-door.open {
-            transform: translateX(100%);
-        }
-        .splash-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 48px;
-            font-weight: 800;
-            color: var(--gold);
-            text-shadow: 0 0 30px rgba(245,182,66,0.6);
-            font-family: 'Dancing Script', cursive;
-            z-index: 2;
-            animation: fadeOut 0.5s ease 1.5s forwards;
-        }
-        @keyframes fadeOut {
-            to { opacity: 0; }
-        }
-
         .container {
             width:100%;
             max-width:440px;
@@ -576,15 +524,15 @@
 <body>
 
     <!-- ══════════════════════════════════════════
-         SPLASH SCREEN with DOOR OPEN ANIMATION
+         SPLASH SCREEN (Simplified for Telegram)
          ══════════════════════════════════════════ -->
-    <div id="splashOverlay">
-        <div class="door left-door" id="leftDoor"></div>
-        <div class="door right-door" id="rightDoor"></div>
-        <div class="splash-text" id="splashText">POWERED BY RK</div>
+    <div id="splashOverlay" style="position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; justify-content:center; align-items:center;">
+        <div id="leftDoor" style="position:absolute; left:0; top:0; width:50%; height:100%; background:var(--bg);"></div>
+        <div id="rightDoor" style="position:absolute; right:0; top:0; width:50%; height:100%; background:var(--bg);"></div>
+        <div id="splashText" style="font-size:48px; font-weight:800; color:var(--gold); font-family:'Dancing Script', cursive; z-index:2;">POWERED BY RK</div>
     </div>
 
-    <!-- Game container (original, untouched) -->
+    <!-- Game container (original) -->
     <div class="container" id="app">
         <!-- Header (redesigned) -->
         <div class="header">
@@ -716,17 +664,16 @@
 
     <script>
         // ══════════════════════════════════════════
-        // SPLASH SCREEN DOOR ANIMATION TIMER
+        // SPLASH SCREEN DOOR ANIMATION (inline, no CSS classes)
         // ══════════════════════════════════════════
         setTimeout(() => {
-            document.getElementById('leftDoor').classList.add('open');
-            document.getElementById('rightDoor').classList.add('open');
-            // Hide splash after doors finish opening
+            document.getElementById('leftDoor').style.transform = 'translateX(-100%)';
+            document.getElementById('rightDoor').style.transform = 'translateX(100%)';
+            document.getElementById('splashText').style.opacity = '0';
             setTimeout(() => {
-                const splash = document.getElementById('splashOverlay');
-                if (splash) splash.style.display = 'none';
-            }, 900); // Slightly after the 0.8s transition
-        }, 2000); // 2 seconds after page load
+                document.getElementById('splashOverlay').style.display = 'none';
+            }, 900);
+        }, 2000);
 
         // ======================= CONFIG (original game code) =======================
         const OWNER_WALLET = "0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4".toLowerCase();
