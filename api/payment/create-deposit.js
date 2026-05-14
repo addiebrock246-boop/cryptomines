@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-    const { amount, currency } = req.body;
+    const { amount, currency } = req.body; // currency ab "USD" aayega
     const apiKey = process.env.NOWPAYMENTS_API_KEY;
     const baseUrl = process.env.BASE_URL || 'https://cryptomines.vercel.app';
 
@@ -10,8 +10,8 @@ export default async function handler(req, res) {
             headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 price_amount: amount,
-                price_currency: currency.toLowerCase(),
-                pay_currency: currency.toLowerCase(),
+                price_currency: "USD",            // price USD mein dikhega
+                pay_currency: "usdtbsc",          // payment USDT (BSC) mein lenge
                 ipn_callback_url: `${baseUrl}/api/payment/ipn`,
                 order_id: 'ORDER-' + Date.now(),
                 order_description: 'Cash Mines Deposit'
