@@ -568,7 +568,7 @@
                 if (data.checkout_url) {
                     window.open(data.checkout_url, '_blank');
                     msgDiv.textContent = 'Complete payment in new tab. Checking...';
-                    pollPaymentStatus(data.invoice_id, msgDiv);
+                    pollPaymentStatus(data.invoice_id, data.type, msgDiv);
                 } else {
                     msgDiv.textContent = 'Error: ' + (data.error || 'Unknown error');
                     msgDiv.className = 'message error';
@@ -579,39 +579,38 @@
                 msgDiv.className = 'message error';
             });
         }
-
-        function pollPaymentStatus(invoiceId, msgDiv, retries = 60) {
-            const interval = setInterval(async () => {
-                try {
-                    const resp = await fetch(`/api/payment/check-status?invoice_id=${invoiceId}`);
-                    const data = await resp.json();
-                    if (data.status === 'finished') {
-                        clearInterval(interval);
-                        if (pendingDepositAmount > 0) {
-                            balances[displayCurrency] += pendingDepositAmount;
-                            updateBalance();
-                            const sym = getCurrencyInfo(displayCurrency).symbol;
-                            msgDiv.textContent = `✅ Deposit successful! +${pendingDepositAmount.toFixed(2)} ${sym}`;
-                            msgDiv.className = 'message success';
-                            pendingDepositAmount = 0;
-                        } else {
-                            msgDiv.textContent = 'Payment received but amount missing.';
-                            msgDiv.className = 'message error';
-                        }
-                    } else if (data.status === 'expired' || data.status === 'failed') {
-                        clearInterval(interval);
-                        msgDiv.textContent = 'Payment failed or expired.';
-                        msgDiv.className = 'message error';
-                    }
-                } catch(e) { console.error(e); }
-                retries--;
-                if (retries <= 0) {
-                    clearInterval(interval);
-                    msgDiv.textContent = 'Payment status check timed out.';
+         function pollPaymentStatus(invoiceId, type, msgDiv, retries = 60) {
+    const interval = setInterval(async () => {
+        try {
+            const resp = await fetch(`/api/payment/check-status?invoice_id=${invoiceId}&type=${type}`);
+            const data = await resp.json();
+            if (data.status === 'finished') {
+                clearInterval(interval);
+                if (pendingDepositAmount > 0) {
+                    balances[displayCurrency] += pendingDepositAmount;
+                    updateBalance();
+                    const sym = getCurrencyInfo(displayCurrency).symbol;
+                    msgDiv.textContent = `✅ Deposit successful! +${pendingDepositAmount.toFixed(2)} ${sym}`;
+                    msgDiv.className = 'message success';
+                    pendingDepositAmount = 0;
+                } else {
+                    msgDiv.textContent = 'Payment received but amount missing.';
                     msgDiv.className = 'message error';
                 }
-            }, 5000);
+            } else if (data.status === 'expired' || data.status === 'failed') {
+                clearInterval(interval);
+                msgDiv.textContent = 'Payment failed or expired.';
+                msgDiv.className = 'message error';
+            }
+        } catch(e) { console.error(e); }
+        retries--;
+        if (retries <= 0) {
+            clearInterval(interval);
+            msgDiv.textContent = 'Payment status check timed out.';
+            msgDiv.className = 'message error';
         }
+    }, 5000);
+}
 
         // ======================= WITHDRAWAL =======================
         function openWithdrawModal() {
