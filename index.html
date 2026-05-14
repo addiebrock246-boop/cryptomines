@@ -544,75 +544,71 @@
         }
 
         // ======================= DEPOSIT VIA NOWPAYMENTS =======================
-        function triggerFiatDeposit() {
-            const currencySymbol = displayCurrency === "DEFAULT" ? "USDT" : getCurrencyInfo(displayCurrency).symbol;
-            const amount = prompt(`Enter amount in ${currencySymbol} (min equivalent ${MIN_BET_USDT} USDT):`);
-            if (!amount) return;
-            const msgDiv = document.getElementById('fiatDepositMsg');
-            msgDiv.textContent = 'Creating payment link...';
-            msgDiv.className = 'message';
+function triggerFiatDeposit() {
+    // Always deposit USDT
+    const amount = prompt(`Enter amount in USDT (min ${MIN_BET_USDT} USDT):`);
+    if (!amount) return;
+    const msgDiv = document.getElementById('fiatDepositMsg');
+    msgDiv.textContent = 'Creating payment link...';
+    msgDiv.className = 'message';
 
-            // Map our internal currency to NOWPayments compatible code
-            let paymentCurrency = displayCurrency === "DEFAULT" ? "USD" : displayCurrency; // NOWPayments uses USD for USDT payments
-            fetch('/api/payment/create-deposit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    user_id: userId,
-                    amount: amount,
-                    currency: paymentCurrency
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.checkout_url) {
-                    window.open(data.checkout_url, '_blank');
-                    msgDiv.textContent = 'Complete payment in the new tab. Checking status...';
-                    pollPaymentStatus(data.invoice_id, msgDiv);
+    fetch('/api/payment/create-deposit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            user_id: userId,
+            amount: amount,
+            currency: "USD"   // Backend ko USD bhejna hai, wo USDT invoice banayega
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.checkout_url) {
+            window.open(data.checkout_url, '_blank');
+            msgDiv.textContent = 'Complete payment in new tab. Checking status...';
+            pollPaymentStatus(data.invoice_id, msgDiv);
+        } else {
+            msgDiv.textContent = 'Error: ' + (data.error || 'Unknown error');
+            msgDiv.className = 'message error';
+        }
+    })
+    .catch(e => {
+        msgDiv.textContent = 'Network error: ' + e.message;
+        msgDiv.className = 'message error';
+    });
+}
+function pollPaymentStatus(orderId, msgDiv, retries = 60) {
+    const interval = setInterval(async () => {
+        try {
+            const resp = await fetch(`/api/payment/check-status?invoice_id=${orderId}`);
+            const data = await resp.json();
+            if (data.status === 'finished') {
+                clearInterval(interval);
+                const paid = parseFloat(data.paid);
+                if (!isNaN(paid) && paid > 0) {
+                    // Always credit USDT (DEFAULT) balance
+                    balances.DEFAULT += paid;
+                    updateBalance();
+                    msgDiv.textContent = `✅ Deposit successful! +${paid.toFixed(2)} USDT`;
+                    msgDiv.className = 'message success';
                 } else {
-                    msgDiv.textContent = 'Error: ' + (data.error || 'Unknown error');
+                    msgDiv.textContent = 'Payment completed but amount not valid.';
                     msgDiv.className = 'message error';
                 }
-            })
-            .catch(e => {
-                msgDiv.textContent = 'Network error: ' + e.message;
+            } else if (data.status === 'expired' || data.status === 'failed') {
+                clearInterval(interval);
+                msgDiv.textContent = 'Payment failed or expired.';
                 msgDiv.className = 'message error';
-            });
+            }
+        } catch(e) { console.error(e); }
+        retries--;
+        if (retries <= 0) {
+            clearInterval(interval);
+            msgDiv.textContent = 'Payment status check timed out.';
+            msgDiv.className = 'message error';
         }
-
-        function pollPaymentStatus(orderId, msgDiv, retries = 60) {
-            const interval = setInterval(async () => {
-                try {
-                    const resp = await fetch(`/api/payment/check-status?invoice_id=${orderId}`);
-                    const data = await resp.json();
-                    if (data.status === 'finished') {
-                        clearInterval(interval);
-                        const paid = parseFloat(data.paid);
-                        if (!isNaN(paid) && paid > 0) {
-                            // Credit the current currency balance
-                            balances[displayCurrency] += paid;
-                            updateBalance();
-                            const sym = getCurrencyInfo(displayCurrency).symbol;
-                            msgDiv.textContent = `✅ Deposit successful! +${paid.toFixed(2)} ${sym}`;
-                            msgDiv.className = 'message success';
-                        } else {
-                            msgDiv.textContent = 'Payment completed but amount not valid.';
-                            msgDiv.className = 'message error';
-                        }
-                    } else if (data.status === 'expired' || data.status === 'failed') {
-                        clearInterval(interval);
-                        msgDiv.textContent = 'Payment failed or expired.';
-                        msgDiv.className = 'message error';
-                    }
-                } catch(e) { console.error(e); }
-                retries--;
-                if (retries <= 0) {
-                    clearInterval(interval);
-                    msgDiv.textContent = 'Payment status check timed out.';
-                    msgDiv.className = 'message error';
-                }
-            }, 5000);
-        }
+    }, 5000);
+}
 
         // ======================= WITHDRAWAL =======================
         function openWithdrawModal() {
