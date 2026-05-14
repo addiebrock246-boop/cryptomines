@@ -8,7 +8,7 @@ export default async function handler(req, res) {
         });
         const data = await response.json();
         let status = data.payment_status;
-        let paid = parseFloat(data.actually_paid) || 0;
+        let paid = parseFloat(data.actually_paid) || 0; // USDT amount
         res.json({ status, paid });
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
