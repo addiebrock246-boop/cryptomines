@@ -568,7 +568,7 @@
         if (data.checkout_url) {
             window.open(data.checkout_url, '_blank');
             msgDiv.textContent = 'Complete payment in new tab. Checking...';
-            const idParam = data.gateway === 'crossmint' ? data.session_id : data.invoice_id;
+            const idParam = data.gateway === 'crossmint' ? data.order_id : data.invoice_id;
             pollPaymentStatus(idParam, data.gateway, msgDiv);
         } else {
             msgDiv.textContent = 'Error: ' + (data.error || 'Unknown error');
