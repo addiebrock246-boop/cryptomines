@@ -31,6 +31,52 @@
         .overlay-sub { color:var(--text-dim); font-size:16px; margin-bottom:20px; }
         .overlay-btn { background:var(--gold); color:#000; border:none; border-radius:14px; padding:14px 32px; font-weight:700; font-size:16px; cursor:pointer; box-shadow:0 0 20px rgba(245,182,66,0.5); }
 
+        /* ---------- DEPOSIT MODAL ---------- */
+        .deposit-modal-overlay {
+            position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85);
+            display:flex; align-items:center; justify-content:center; z-index:280;
+            opacity:0; pointer-events:none; transition:opacity 0.3s;
+        }
+        .deposit-modal-overlay.active { opacity:1; pointer-events:auto; }
+        .deposit-modal {
+            background:var(--surface); border:2px solid var(--gold); border-radius:20px;
+            padding:28px 22px; text-align:center; position:relative; max-width:360px; width:90%;
+            box-shadow:0 0 40px rgba(245,182,66,0.3);
+        }
+        .deposit-modal-close {
+            position:absolute; top:12px; right:16px; background:none; border:none;
+            font-size:26px; color:var(--text-dim); cursor:pointer; line-height:1;
+        }
+        .deposit-modal-title {
+            font-size:20px; font-weight:800; color:var(--gold); margin-bottom:6px;
+        }
+        .deposit-modal-currency {
+            font-size:14px; color:var(--text-dim); margin-bottom:18px;
+        }
+        .deposit-modal-amount-label {
+            font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;
+        }
+        .deposit-modal-input {
+            width:100%; background:rgba(255,255,255,0.06); border:2px solid rgba(245,182,66,0.3);
+            border-radius:14px; padding:16px; color:var(--text); font-size:28px; font-weight:700;
+            text-align:center; outline:none; transition:border 0.2s, box-shadow 0.2s;
+        }
+        .deposit-modal-input:focus {
+            border-color:var(--gold); box-shadow:0 0 20px rgba(245,182,66,0.25);
+        }
+        .deposit-modal-min {
+            font-size:11px; color:var(--text-dim); margin-top:8px; margin-bottom:18px;
+        }
+        .deposit-modal-btns { display:flex; gap:10px; }
+        .deposit-modal-btn {
+            flex:1; padding:14px; border:none; border-radius:12px; font-weight:700; font-size:15px; cursor:pointer; transition:0.2s;
+        }
+        .deposit-modal-btn.cancel { background:rgba(255,255,255,0.08); color:var(--text); }
+        .deposit-modal-btn.confirm { background:linear-gradient(135deg, var(--accent1), var(--accent2)); color:#000; }
+        .deposit-modal-btn:active { transform:scale(0.95); }
+        .deposit-modal-error { color:var(--red); font-size:12px; margin-top:8px; min-height:16px; }
+        /* --------------------------------- */
+
         /* ---------- COMING SOON overlay ---------- */
         .coming-soon-overlay {
             position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.92);
@@ -258,7 +304,6 @@
             </div>
         </div>
 
-        <!-- Game Config -->
         <div class="game-config" id="gameConfig">
             <div class="input-group">
                 <span class="input-label" id="betLabel">AMOUNT BET (MIN 10 USDT)</span>
@@ -271,12 +316,10 @@
             <button class="cashout-btn" id="cashoutBtn" disabled>💰 <span data-i18n="cashout">Cashout</span></button>
         </div>
 
-        <!-- Grid -->
         <div class="grid" id="grid"></div>
         <button class="start-btn" id="startBtn">🔥 <span data-i18n="start_bet">START BET</span></button>
         <div class="message" id="gameMsg"></div>
 
-        <!-- History -->
         <div class="history-section" id="historySection">
             <div class="history-title" data-i18n="players_bets">📊 Players Bets</div>
             <table class="history-table">
@@ -291,6 +334,23 @@
         <div class="overlay-text">💣 <span data-i18n="you_lost">YOU LOST</span></div>
         <div class="overlay-sub" data-i18n="better_luck">Better luck next time!</div>
         <button class="overlay-btn" onclick="closeOverlay()" data-i18n="play_again">PLAY AGAIN</button>
+    </div>
+
+    <!-- DEPOSIT MODAL (CUSTOM PROMPT) -->
+    <div class="deposit-modal-overlay" id="depositModalOverlay">
+        <div class="deposit-modal">
+            <button class="deposit-modal-close" onclick="closeDepositModal()">✕</button>
+            <div class="deposit-modal-title">Add Funds</div>
+            <div class="deposit-modal-currency" id="depositModalCurrency">USDT</div>
+            <div class="deposit-modal-amount-label">Enter Amount</div>
+            <input class="deposit-modal-input" id="depositModalInput" type="number" placeholder="0.00" step="0.01" min="0">
+            <div class="deposit-modal-min" id="depositModalMin">Minimum: 10.00 USDT</div>
+            <div class="deposit-modal-btns">
+                <button class="deposit-modal-btn cancel" onclick="closeDepositModal()">Cancel</button>
+                <button class="deposit-modal-btn confirm" onclick="confirmDeposit()">Deposit</button>
+            </div>
+            <div class="deposit-modal-error" id="depositModalError"></div>
+        </div>
     </div>
 
     <!-- Coming Soon Overlay -->
@@ -423,10 +483,7 @@
         const translations = {
             en: { settings:"Settings", bombs:"Bombs", cashout:"Cashout", start_bet:"START BET", you_lost:"YOU LOST", better_luck:"Better luck next time!", play_again:"PLAY AGAIN", players_bets:"📊 Players Bets", player:"Player", bet:"Bet", odds:"Odds", win_loss:"Win/Loss", profile:"Profile", username_placeholder:"Enter username", save_profile:"Save Profile", fiat_deposit:"Fiat Deposit", add_funds:"💰 Add Funds", insufficient:"Please add funds to play." },
             hi: { settings:"सेटिंग्स", bombs:"बम", cashout:"कैशआउट", start_bet:"दांव लगाएं", you_lost:"आप हार गए", better_luck:"अगली बार किस्मत अच्छी हो!", play_again:"फिर से खेलें", players_bets:"📊 खिलाड़ियों की बेट", player:"खिलाड़ी", bet:"बेट", odds:"ऑड्स", win_loss:"जीत/हार", profile:"प्रोफ़ाइल", username_placeholder:"उपयोगकर्ता नाम दर्ज करें", save_profile:"प्रोफ़ाइल सहेजें", fiat_deposit:"फिएट जमा", add_funds:"💰 फंड जोड़ें", insufficient:"कृपया खेलने के लिए फंड जोड़ें।" },
-            ur: { settings:"ترتیبات", bombs:"بارودی سرنگیں", cashout:"نقدی", start_bet:"شرط لگائیں", you_lost:"آپ ہار گئے", better_luck:"اگلی بار قسمت اچھی ہوگی!", play_again:"دوبارہ کھیلیں", players_bets:"📊 کھلاڑیوں کی شرطیں", player:"کھلاڑی", bet:"شرط", odds:"مشکلات", win_loss:"جیت/ہار", profile:"پروفائل", username_placeholder:"صارف نام درج کریں", save_profile:"پروفائل محفوظ کریں", fiat_deposit:"فیاٹ جمع", add_funds:"💰 فنڈز شامل کریں", insufficient:"براہ کرم کھیلنے کے لئے فنڈز شامل کریں۔" },
-            ar: { settings:"الإعدادات", bombs:"قنابل", cashout:"سحب", start_bet:"ابدأ الرهان", you_lost:"لقد خسرت", better_luck:"حظ أوفر في المرة القادمة!", play_again:"العب مرة أخرى", players_bets:"📊 رهانات اللاعبين", player:"اللاعب", bet:"الرهان", odds:"الاحتمالات", win_loss:"ربح/خسارة", profile:"الملف الشخصي", username_placeholder:"أدخل اسم المستخدم", save_profile:"حفظ الملف الشخصي", fiat_deposit:"إيداع نقدي", add_funds:"💰 إضافة أموال", insufficient:"يرجى إضافة أموال للعب." },
-            es: { settings:"Ajustes", bombs:"Bombas", cashout:"Retirar", start_bet:"COMENZAR APUESTA", you_lost:"PERDISTE", better_luck:"¡Mejor suerte la próxima vez!", play_again:"JUGAR DE NUEVO", players_bets:"📊 Apuestas de jugadores", player:"Jugador", bet:"Apuesta", odds:"Cuotas", win_loss:"Ganancia/Pérdida", profile:"Perfil", username_placeholder:"Ingrese nombre de usuario", save_profile:"Guardar perfil", fiat_deposit:"Depósito Fiat", add_funds:"💰 Agregar fondos", insufficient:"Por favor agregue fondos para jugar." },
-            fr: { settings:"Paramètres", bombs:"Bombes", cashout:"Retirer", start_bet:"COMMENCER LE PARI", you_lost:"VOUS AVEZ PERDU", better_luck:"Meilleure chance la prochaine fois!", play_again:"JOUER À NOUVEAU", players_bets:"📊 Paris des joueurs", player:"Joueur", bet:"Mise", odds:"Cotes", win_loss:"Gain/Perte", profile:"Profil", username_placeholder:"Entrez le nom d'utilisateur", save_profile:"Enregistrer le profil", fiat_deposit:"Dépôt Fiat", add_funds:"💰 Ajouter des fonds", insufficient:"Veuillez ajouter des fonds pour jouer." }
+            ur: { settings:"ترتیبات", bombs:"بارودی سرنگیں", cashout:"نقدی", start_bet:"شرط لگائیں", you_lost:"آپ ہار گئے", better_luck:"اگلی بار قسمت اچھی ہوگی!", play_again:"دوبارہ کھیلیں", players_bets:"📊 کھلاڑیوں کی شرطیں", player:"کھلاڑی", bet:"شرط", odds:"مشکلات", win_loss:"جیت/ہار", profile:"پروفائل", username_placeholder:"صارف نام درج کریں", save_profile:"پروفائل محفوظ کریں", fiat_deposit:"فیاٹ جمع", add_funds:"💰 فنڈز شامل کریں", insufficient:"براہ کرم کھیلنے کے لئے فنڈز شامل کریں۔" }
         };
 
         const supportedCurrencies = [
@@ -443,18 +500,16 @@
         const supportedLanguages = [
             { code:"en", flag:"🇺🇸", name:"English (US)" },
             { code:"hi", flag:"🇮🇳", name:"हिन्दी" },
-            { code:"ur", flag:"🇵🇰", name:"اردو" },
-            { code:"es", flag:"🇪🇸", name:"Español" },
-            { code:"fr", flag:"🇲🇨", name:"Français" }
+            { code:"ur", flag:"🇵🇰", name:"اردو" }
         ];
 
-        const indianNames = ["Aarav","Vivaan","Aditya","Vihaan","Arjun","Sai","Reyansh","Krishna","Ayaan","Ishaan","Shaurya","Atharv","Dhruv","Kabir","Rudra","Kartik","Rohan","Aryan","Dev","Mohammed","Ananya","Diya","Prisha","Aadhya","Saanvi","Anika","Pari","Myra","Ira","Kiara","Siya","Riya","Tanvi","Avni","Aarohi","Anvi","Jiya","Navya","Shanaya","Vanya","Tara","Meera","Sara","Ishita","Lavanya","Raj","Rahul","Vikram","Siddharth","Manish","Nitin","Deepak","Sunil","Suresh","Rajesh","Mahesh","Rakesh","Dinesh","Prakash","Anil","Vijay","Sanjay","Ajay","Abhishek","Amit","Pradeep","Sachin","Gaurav","Kunal","Rohit","Akshay","Naveen","Tarun","Vivek","Neha","Pooja","Shweta","Kavita","Rashmi","Nisha","Sunita","Anjali","Preeti","Ritu","Smita","Komal","Mona","Sonali","Kajal","Madhuri","Shilpa","Raveena","Karishma","Priyanka","Deepika","Alia","Radhika","Suhana","Kiara","Nora"];
-        const americanNames = ["James","John","Robert","Michael","William","David","Richard","Joseph","Thomas","Charles","Christopher","Daniel","Matthew","Anthony","Mark","Donald","Steven","Paul","Andrew","Joshua","Kenneth","Kevin","Brian","George","Timothy","Ronald","Edward","Jason","Jeffrey","Ryan","Jacob","Gary","Nicholas","Eric","Jonathan","Stephen","Larry","Justin","Scott","Brandon","Benjamin","Samuel","Raymond","Gregory","Frank","Alexander","Patrick","Jack","Dennis","Jerry","Tyler","Aaron","Jose","Adam","Nathan","Mary","Patricia","Jennifer","Linda","Barbara","Elizabeth","Susan","Jessica","Sarah","Karen","Lisa","Nancy","Betty","Margaret","Sandra","Ashley","Dorothy","Kimberly","Emily","Donna","Michelle","Carol","Amanda","Melissa","Deborah","Stephanie","Rebecca","Sharon","Laura","Cynthia","Kathleen","Amy","Angela","Shirley","Anna","Brenda","Pamela","Emma","Nicole","Helen","Samantha","Katherine","Christine","Debra","Rachel","Carolyn","Janet","Catherine","Maria","Heather","Diane"];
-        const britishNames = ["James","John","William","George","Thomas","Charles","Arthur","Frederick","Albert","Edward","Henry","David","Michael","Elizabeth","Victoria","Mary","Margaret","Anne","Catherine","Sarah","Emily","Charlotte","Amelia","Harper","Evelyn","Abigail","Ella","Avery","Sofia","Camila","Aria","Scarlett","Victoria","Madison","Luna","Grace","Chloe","Penelope","Layla","Riley","Zoey","Nora","Lily","Eleanor","Hannah","Lillian","Addison","Aubrey","Ellie","Stella","Natalie","Zoe","Leah","Hazel","Violet","Aurora","Savannah","Audrey","Brooklyn","Bella","Claire","Skylar","Lucy","Paisley","Everly","Anna","Caroline","Nova","Genesis","Emilia","Kennedy","Samantha","Maya","Willow","Kinsley","Naomi","Aaliyah","Elena","Sarah","Ariana","Allison","Gabriella","Alice","Madelyn","Cora","Ruby","Eva","Serenity","Autumn","Adeline","Hailey","Gianna","Valentina","Isla","Eliana","Quinn","Nevaeh","Ivy","Sadie","Piper","Lydia","Alexa","Josephine","Emery","Julia","Delilah","Arianna","Vivian","Kaylee","Sophie","Brielle","Madeline","Peyton","Rylee","Clara","Hadley","Melanie","Mackenzie","Reagan","Adalynn","Liliana","Aubree","Jade","Katherine"];
-        const australianNames = ["Jack","William","Oliver","Noah","Leo","Lucas","Henry","Charlie","Thomas","Liam","James","Ethan","Alexander","Max","Harrison","Samuel","Jacob","Ryan","Matthew","Nicholas","Charlotte","Amelia","Olivia","Mia","Ava","Isla","Grace","Chloe","Zoe","Sophie","Ella","Matilda","Ruby","Emily","Sienna","Lily","Ivy","Harper","Evie","Mackenzie","Aria","Scarlett","Victoria","Luna","Savannah","Audrey","Brooklyn","Bella","Claire","Skylar","Lucy","Paisley","Everly","Anna","Caroline","Nova","Genesis","Emilia","Kennedy","Samantha","Maya","Willow","Kinsley","Naomi","Aaliyah","Elena","Sarah","Ariana","Allison","Gabriella","Alice","Madelyn","Cora","Ruby","Eva","Serenity","Autumn","Adeline","Hailey","Gianna","Valentina","Isla","Eliana","Quinn","Nevaeh","Ivy","Sadie","Piper","Lydia","Alexa","Josephine","Emery","Julia","Delilah","Arianna","Vivian","Kaylee","Sophie","Brielle","Madeline","Peyton","Rylee","Clara","Hadley"];
-        const pakistaniNames = ["Omar","Ahmed","Ali","Hassan","Hussein","Mohamed","Youssef","Khaled","Tarek","Mustafa","Ibrahim","Abdullah","Salman","Fahad","Majed","Nasser","Saeed","Adel","Bilal","Hamza","Zaid","Yahya","Karim","Rashid","Samir","Tamer","Walid","Fadi","Hadi","Jad","Layth","Mazin","Nabil","Osama","Rami","Saif","Yasser","Aisha","Fatima","Noura","Layla","Mona","Huda","Samira","Yasmin","Dalia","Rania","Hana","Reem","Suha","Amal","Habiba","Nadia","Leila","Salma","Zeina","Nada","Jumana","Rasha","Maha","Hala","Sahar","Lina","Dana","Mira","Farah","Noor","Alaa","Rawan","Sana","May","Laila","Bushra","Souad","Asma","Khadeeja","Mariam","Aya","Ruba","Shireen","Raj","Rahul","Vikram","Siddharth","Manish","Nitin","Deepak","Sunil","Suresh","Rajesh","Mahesh","Rakesh","Dinesh","Prakash","Anil","Vijay","Sanjay","Ajay","Abhishek","Amit"];
-        const monacoNames = ["Charlotte","Amelia","Harper","Evelyn","Abigail","Emily","Ella","Avery","Sofia","Camila","Aria","Scarlett","Victoria","Madison","Luna","Grace","Chloe","Penelope","Layla","Riley","Zoey","Nora","Lily","Eleanor","Hannah","Lillian","Addison","Aubrey","Ellie","Stella","Natalie","Zoe","Leah","Hazel","Violet","Aurora","Savannah","Audrey","Brooklyn","Bella","Claire","Skylar","Lucy","Paisley","Everly","Anna","Caroline","Nova","Genesis","Emilia","Kennedy","Samantha","Maya","Willow","Kinsley","Naomi","Aaliyah","Elena","Sarah","Ariana","Allison","Gabriella","Alice","Madelyn","Cora","Ruby","Eva","Serenity","Autumn","Adeline","Hailey","Gianna","Valentina","Isla","Eliana","Quinn","Nevaeh","Ivy","Sadie","Piper","Lydia","Alexa","Josephine","Emery","Julia","Delilah","Arianna","Vivian","Kaylee","Sophie","Brielle","Madeline","Peyton","Rylee","Clara","Hadley"];
-        const spainNames = ["Jose","Juan","Carlos","Miguel","Alejandro","Javier","Pablo","Daniel","David","Sergio","Maria","Carmen","Ana","Isabel","Laura","Sofia","Valentina","Isabella","Camila","Aria","Scarlett","Victoria","Madison","Luna","Grace","Chloe","Penelope","Layla","Riley","Zoey","Nora","Lily","Eleanor","Hannah","Lillian","Addison","Aubrey","Ellie","Stella","Natalie","Zoe","Leah","Hazel","Violet","Aurora","Savannah","Audrey","Brooklyn","Bella","Claire","Skylar","Lucy","Paisley","Everly","Anna","Caroline","Nova","Genesis","Emilia","Kennedy","Samantha","Maya","Willow","Kinsley","Naomi","Aaliyah","Elena","Sarah","Ariana","Allison","Gabriella","Alice","Madelyn","Cora","Ruby","Eva","Serenity","Autumn","Adeline","Hailey","Gianna","Valentina","Isla","Eliana","Quinn","Nevaeh","Ivy","Sadie","Piper","Lydia","Alexa","Josephine","Emery","Julia","Delilah","Arianna","Vivian","Kaylee","Sophie","Brielle","Madeline","Peyton","Rylee","Clara","Hadley"];
+        const indianNames = ["Aarav","Vivaan","Aditya","Vihaan","Arjun","Sai","Reyansh","Krishna","Ayaan","Ishaan","Shaurya","Atharv","Dhruv","Kabir","Rudra","Kartik","Rohan","Aryan","Dev","Mohammed"];
+        const americanNames = ["James","John","Robert","Michael","William","David","Richard","Joseph","Thomas","Charles","Christopher","Daniel","Matthew","Anthony","Mark","Donald"];
+        const britishNames = ["James","John","William","George","Thomas","Charles","Arthur","Frederick","Albert","Edward","Henry","David","Michael","Elizabeth","Victoria"];
+        const australianNames = ["Jack","William","Oliver","Noah","Leo","Lucas","Henry","Charlie","Thomas","Liam","James","Ethan","Alexander","Max","Harrison"];
+        const pakistaniNames = ["Omar","Ahmed","Ali","Hassan","Hussein","Mohamed","Youssef","Khaled","Tarek","Mustafa","Ibrahim","Abdullah","Salman","Fahad","Majed"];
+        const monacoNames = ["Charlotte","Amelia","Harper","Evelyn","Abigail","Emily","Ella","Avery","Sofia","Camila","Aria","Scarlett","Victoria","Madison","Luna"];
+        const spainNames = ["Jose","Juan","Carlos","Miguel","Alejandro","Javier","Pablo","Daniel","David","Sergio","Maria","Carmen","Ana","Isabel","Laura"];
 
         function getNamePool() {
             if (displayCurrency === "INR") return indianNames;
@@ -573,34 +628,38 @@
             document.execCommand('copy'); document.body.removeChild(ta); alert('Address copied!');
         }
 
-        // ======================= COMING SOON FUNCTIONS =======================
-        function showComingSoon() {
-            document.getElementById('comingSoonOverlay').classList.add('active');
+        // ======================= DEPOSIT MODAL =======================
+        function openDepositModal() {
+            const info = getCurrencyInfo(displayCurrency);
+            const min = getMinBetLocal();
+            document.getElementById('depositModalCurrency').textContent = info.symbol + ' (' + info.name + ')';
+            document.getElementById('depositModalMin').textContent = 'Minimum: ' + min.toFixed(2) + ' ' + info.symbol;
+            document.getElementById('depositModalInput').value = '';
+            document.getElementById('depositModalInput').focus();
+            document.getElementById('depositModalError').textContent = '';
+            document.getElementById('depositModalOverlay').classList.add('active');
         }
 
-        function closeComingSoon() {
-            document.getElementById('comingSoonOverlay').classList.remove('active');
+        function closeDepositModal() {
+            document.getElementById('depositModalOverlay').classList.remove('active');
         }
 
-        // ======================= DEPOSIT LOGIC =======================
-        function triggerFiatDeposit() {
-            // If any non-Default currency is selected, show "COMING SOON"
-            if (displayCurrency !== "DEFAULT") {
-                showComingSoon();
-                return;
-            }
-
-            // Default (USDT) deposit via NOWPayments
-            const cur = getCurrencyInfo(displayCurrency);
-            const min = getMinBetLocal().toFixed(2);
-            const sym = cur.symbol;
-            const amountStr = prompt(`Enter amount in ${sym} (min ${min} ${sym}):`);
-            if (!amountStr) return;
+        function confirmDeposit() {
+            const amountStr = document.getElementById('depositModalInput').value;
             const amount = parseFloat(amountStr);
-            if (isNaN(amount) || amount < MIN_BET_USDT) {
-                alert(`Minimum deposit is ${MIN_BET_USDT} USDT`);
+            const min = getMinBetLocal();
+            const info = getCurrencyInfo(displayCurrency);
+
+            if (isNaN(amount) || amount <= 0) {
+                document.getElementById('depositModalError').textContent = 'Please enter a valid amount';
                 return;
             }
+            if (amount < min) {
+                document.getElementById('depositModalError').textContent = 'Minimum deposit is ' + min.toFixed(2) + ' ' + info.symbol;
+                return;
+            }
+
+            closeDepositModal();
             pendingDepositAmount = amount;
 
             const msgDiv = document.getElementById('fiatDepositMsg');
@@ -627,6 +686,24 @@
                 msgDiv.textContent = 'Network error: ' + e.message;
                 msgDiv.className = 'message error';
             });
+        }
+
+        // ======================= COMING SOON =======================
+        function showComingSoon() {
+            document.getElementById('comingSoonOverlay').classList.add('active');
+        }
+
+        function closeComingSoon() {
+            document.getElementById('comingSoonOverlay').classList.remove('active');
+        }
+
+        // ======================= DEPOSIT LOGIC =======================
+        function triggerFiatDeposit() {
+            if (displayCurrency !== "DEFAULT") {
+                showComingSoon();
+                return;
+            }
+            openDepositModal();
         }
 
         function pollPaymentStatus(invoiceId, msgDiv, retries = 60) {
@@ -752,7 +829,6 @@
         }
 
         function startGame() {
-            // Block game start for non-USDT currencies
             if (displayCurrency !== "DEFAULT") {
                 showComingSoon();
                 return;
