@@ -1,22 +1,32 @@
 export default async function handler(req, res) {
-    const { invoice_id } = req.query;
-    const apiKey = process.env.NOWPAYMENTS_API_KEY;
-
-    if (!apiKey) {
-        return res.status(500).json({ error: 'Server misconfiguration: API key missing' });
-    }
+    const { gateway, id } = req.query;
 
     try {
-        const response = await fetch(`https://api.nowpayments.io/v1/invoice/${invoice_id}`, {
-            headers: { 'x-api-key': apiKey }
-        });
-
-        const data = await response.json();
-        // NOWPayments statuses: 'created', 'partially_paid', 'finished', 'failed', 'expired'
-        res.json({
-            status: data.payment_status,
-            paid: parseFloat(data.actually_paid) || 0
-        });
+        if (gateway === 'crossmint') {
+            const apiKey = process.env.CROSSMINT_API_KEY;
+            const crossmintBase = apiKey.startsWith('sk_staging')
+                ? 'https://staging.crossmint.com'
+                : 'https://www.crossmint.com';
+            const resp = await fetch(`${crossmintBase}/api/2022-06-09/checkout/sessions/${id}`, {
+                headers: { 'x-api-key': apiKey }
+            });
+            const data = await resp.json();
+            res.json({
+                status: data.status === 'completed' ? 'finished' : data.status,
+                paid: data.status === 'completed'
+            });
+        } else {
+            // NOWPayments
+            const apiKey = process.env.NOWPAYMENTS_API_KEY;
+            const resp = await fetch(`https://api.nowpayments.io/v1/invoice/${id}`, {
+                headers: { 'x-api-key': apiKey }
+            });
+            const data = await resp.json();
+            res.json({
+                status: data.payment_status,
+                paid: data.payment_status === 'finished'
+            });
+        }
     } catch (error) {
         res.status(500).json({ error: 'Status check failed' });
     }
