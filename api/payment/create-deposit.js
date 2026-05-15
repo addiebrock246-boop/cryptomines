@@ -3,7 +3,7 @@ export default async function handler(req, res) {
 
     const { amount, currency, is_fiat } = req.body;
     const baseUrl = process.env.BASE_URL || 'https://cryptomines.vercel.app';
-    const recipientAddress = '0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4'; // तेरी BSC वॉलेट
+    const recipientAddress = '0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4'; // तेरी Trust Wallet (BSC)
     const settleChain = 'bsc';
     const settleCurrency = 'usdt';
 
@@ -29,7 +29,7 @@ export default async function handler(req, res) {
                         currency: currency.toLowerCase(),
                         receiptEmail: 'no-reply@example.com'
                     },
-                    line_items: [                  // ✅ 'line_items' (snake_case) – यही बदलाव किया है
+                    lineItems: [                             // ✅ camelCase – यही सही है
                         {
                             title: 'Cash Mines Deposit',
                             description: `Deposit ${amount} ${currency}`,
@@ -41,11 +41,11 @@ export default async function handler(req, res) {
                         }
                     ],
                     recipient: {
-                        walletAddress: recipientAddress    // सिर्फ़ एड्रेस
+                        walletAddress: recipientAddress     // सिर्फ़ एड्रेस
                     },
                     settlement: {
-                        currency: settleCurrency,          // USDT
-                        chain: settleChain                // BSC
+                        currency: settleCurrency,           // USDT
+                        chain: settleChain                 // BSC
                     }
                 })
             });
