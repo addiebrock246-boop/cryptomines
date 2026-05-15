@@ -4,15 +4,14 @@ export default async function handler(req, res) {
     const { amount, currency, is_fiat } = req.body;
     const baseUrl = process.env.BASE_URL || 'https://cryptomines.vercel.app';
 
-    // तेरा वॉलेट एड्रेस (Polygon और BSC दोनों के लिए काम करेगा)
+    // तेरा वॉलेट (BSC और Polygon दोनों पर एक ही एड्रेस)
     const recipientAddress = '0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4';
 
-    // Polygon चेन पर USDT का कॉन्ट्रैक्ट एड्रेस
+    // ✅ Polygon पर USDT का सही कॉन्ट्रैक्ट एड्रेस
     const polygonUsdtContract = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
 
     try {
         if (is_fiat) {
-            // ---- Crossmint Onramp (Google Pay, Cards) ----
             const crossmintApiKey = process.env.CROSSMINT_API_KEY;
             if (!crossmintApiKey) throw new Error('CROSSMINT_API_KEY not set');
 
@@ -29,19 +28,20 @@ export default async function handler(req, res) {
                 body: JSON.stringify({
                     lineItems: [
                         {
-                            tokenLocator: `polygon:${polygonUsdtContract}`,   // Polygon पर USDT
+                            // ✅ सही tokenLocator: polygon:contract
+                            tokenLocator: `polygon:${polygonUsdtContract}`,
                             executionParameters: {
                                 mode: "exact-in",
-                                amount: amount.toString(),          // कितनी USDT खरीदनी है
+                                amount: amount.toString(),
                             },
                         },
                     ],
                     payment: {
-                        method: "card",                             // कार्ड पेमेंट (Google Pay ऑटो दिखेगा)
-                        receiptEmail: "no-reply@example.com",       // KYC के लिए ज़रूरी
+                        method: "card",
+                        receiptEmail: "no-reply@example.com",
                     },
                     recipient: {
-                        walletAddress: recipientAddress,            // तेरा वॉलेट (Polygon)
+                        walletAddress: recipientAddress,
                     },
                 })
             });
@@ -55,7 +55,7 @@ export default async function handler(req, res) {
                     gateway: 'crossmint'
                 });
             } else {
-                console.error('Crossmint error:', data);
+                console.error('Crossmint error:', JSON.stringify(data));
                 res.status(400).json({ error: data.message || 'Failed to create order' });
             }
 
