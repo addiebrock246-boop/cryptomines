@@ -26,7 +26,7 @@ export default async function handler(req, res) {
                         chain: chain,
                         currency: settleCurrency
                     },
-                    paymentMethods: ['card', 'googlePay'],
+                    paymentMethods: ['card', 'google-pay'],
                     lineItems: [{
                         title: 'Cash Mines Deposit',
                         description: `Deposit ${amount} ${currency}`,
