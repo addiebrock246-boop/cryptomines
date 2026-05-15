@@ -13,14 +13,12 @@ export default async function handler(req, res) {
             });
             const data = await resp.json();
 
-            // Crossmint में 'phase' या 'status' के 'completed' का मतलब पेमेंट हो गई
             const isCompleted = (data.order && data.order.phase === 'completed');
             res.json({
                 status: isCompleted ? 'finished' : (data.order ? data.order.phase : 'pending'),
                 paid: isCompleted
             });
         } else {
-            // NOWPayments
             const apiKey = process.env.NOWPAYMENTS_API_KEY;
             const resp = await fetch(`https://api.nowpayments.io/v1/invoice/${id}`, {
                 headers: { 'x-api-key': apiKey }
