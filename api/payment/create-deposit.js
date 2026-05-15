@@ -3,7 +3,7 @@ export default async function handler(req, res) {
 
     const { amount, currency, is_fiat } = req.body;
     const baseUrl = process.env.BASE_URL || 'https://cryptomines.vercel.app';
-    const recipientAddress = '0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4'; // तेरा BSC Wallet
+    const recipientAddress = '0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4'; // तेरी BSC वॉलेट
     const settleChain = 'bsc';
     const settleCurrency = 'usdt';
 
@@ -27,19 +27,21 @@ export default async function handler(req, res) {
                     payment: {
                         method: 'card',
                         currency: currency.toLowerCase(),
-                        receiptEmail: 'customer@example.com'  // किसी भी वैल्यू से काम चल जाएगा
+                        receiptEmail: 'no-reply@example.com'
                     },
-                    lineItems: [{
-                        title: 'Cash Mines Deposit',
-                        description: `Deposit ${amount} ${currency}`,
-                        price: {
-                            amount: amount.toString(),
-                            currency: currency.toLowerCase()
-                        },
-                        quantity: 1
-                    }],
+                    line_items: [                  // ✅ 'line_items' (snake_case) – यही बदलाव किया है
+                        {
+                            title: 'Cash Mines Deposit',
+                            description: `Deposit ${amount} ${currency}`,
+                            price: {
+                                amount: amount.toString(),
+                                currency: currency.toLowerCase()
+                            },
+                            quantity: 1
+                        }
+                    ],
                     recipient: {
-                        walletAddress: recipientAddress    // सिर्फ़ वॉलेट एड्रेस
+                        walletAddress: recipientAddress    // सिर्फ़ एड्रेस
                     },
                     settlement: {
                         currency: settleCurrency,          // USDT
