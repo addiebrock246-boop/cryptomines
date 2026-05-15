@@ -3,9 +3,12 @@ export default async function handler(req, res) {
 
     const { amount, currency, is_fiat } = req.body;
     const baseUrl = process.env.BASE_URL || 'https://cryptomines.vercel.app';
-    const recipientAddress = '0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4'; // तेरी Trust Wallet (BSC)
-    // BSC नेटवर्क पर USDT का कॉन्ट्रैक्ट एड्रेस
-    const usdtBscContract = '0x55d398326f99059fF775485246999027B3197955';
+
+    // तेरा वॉलेट एड्रेस (Polygon और BSC दोनों के लिए काम करेगा)
+    const recipientAddress = '0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4';
+
+    // Polygon चेन पर USDT का कॉन्ट्रैक्ट एड्रेस
+    const polygonUsdtContract = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
 
     try {
         if (is_fiat) {
@@ -26,19 +29,19 @@ export default async function handler(req, res) {
                 body: JSON.stringify({
                     lineItems: [
                         {
-                            tokenLocator: `bsc:${usdtBscContract}`,   // BSC पर USDT
+                            tokenLocator: `polygon:${polygonUsdtContract}`,   // Polygon पर USDT
                             executionParameters: {
                                 mode: "exact-in",
-                                amount: amount.toString(),          // कितना USDT खरीदना है
+                                amount: amount.toString(),          // कितनी USDT खरीदनी है
                             },
                         },
                     ],
                     payment: {
-                        method: "card",                             // कार्ड पेमेंट
+                        method: "card",                             // कार्ड पेमेंट (Google Pay ऑटो दिखेगा)
                         receiptEmail: "no-reply@example.com",       // KYC के लिए ज़रूरी
                     },
                     recipient: {
-                        walletAddress: recipientAddress,            // तेरा BSC वॉलेट
+                        walletAddress: recipientAddress,            // तेरा वॉलेट (Polygon)
                     },
                 })
             });
@@ -57,7 +60,7 @@ export default async function handler(req, res) {
             }
 
         } else {
-            // ---- NOWPayments Crypto Invoice (USDT) ----
+            // ---- NOWPayments Crypto Invoice (USDT BSC) ----
             const nowApiKey = process.env.NOWPAYMENTS_API_KEY;
             if (!nowApiKey) throw new Error('NOWPAYMENTS_API_KEY not set');
 
