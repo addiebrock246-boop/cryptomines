@@ -7,13 +7,18 @@ export default async function handler(req, res) {
             const crossmintBase = apiKey.startsWith('sk_staging')
                 ? 'https://staging.crossmint.com'
                 : 'https://www.crossmint.com';
-            const resp = await fetch(`${crossmintBase}/api/2022-06-09/checkout/sessions/${id}`, {
+
+            // ✅ Orders endpoint से status चेक करो
+            const resp = await fetch(`${crossmintBase}/api/2022-06-09/orders/${id}`, {
                 headers: { 'x-api-key': apiKey }
             });
             const data = await resp.json();
+
+            // Crossmint order की फेज देखो: 'payment' फेज में 'completed' माने पेमेंट हो गई
+            const isCompleted = data.order && data.order.phase === 'completed';
             res.json({
-                status: data.status === 'completed' ? 'finished' : data.status,
-                paid: data.status === 'completed'
+                status: isCompleted ? 'finished' : (data.order ? data.order.phase : 'pending'),
+                paid: isCompleted
             });
         } else {
             // NOWPayments
