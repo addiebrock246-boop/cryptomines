@@ -8,14 +8,13 @@ export default async function handler(req, res) {
                 ? 'https://staging.crossmint.com'
                 : 'https://www.crossmint.com';
 
-            // ✅ Orders endpoint से status चेक करो
             const resp = await fetch(`${crossmintBase}/api/2022-06-09/orders/${id}`, {
                 headers: { 'x-api-key': apiKey }
             });
             const data = await resp.json();
 
-            // Crossmint order की फेज देखो: 'payment' फेज में 'completed' माने पेमेंट हो गई
-            const isCompleted = data.order && data.order.phase === 'completed';
+            // Crossmint में 'phase' या 'status' के 'completed' का मतलब पेमेंट हो गई
+            const isCompleted = (data.order && data.order.phase === 'completed');
             res.json({
                 status: isCompleted ? 'finished' : (data.order ? data.order.phase : 'pending'),
                 paid: isCompleted
