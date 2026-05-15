@@ -3,8 +3,8 @@ export default async function handler(req, res) {
 
     const { amount, currency, is_fiat } = req.body;
     const baseUrl = process.env.BASE_URL || 'https://cryptomines.vercel.app';
-    const recipientAddress = '0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4';
-    const chain = 'bsc';
+    const recipientAddress = '0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4'; // तेरा BSC Wallet
+    const settleChain = 'bsc';
     const settleCurrency = 'usdt';
 
     try {
@@ -17,7 +17,6 @@ export default async function handler(req, res) {
                 ? 'https://staging.crossmint.com'
                 : 'https://www.crossmint.com';
 
-            // ✅ सही API endpoint: /api/2022-06-09/orders
             const response = await fetch(`${crossmintBase}/api/2022-06-09/orders`, {
                 method: 'POST',
                 headers: {
@@ -28,7 +27,7 @@ export default async function handler(req, res) {
                     payment: {
                         method: 'card',
                         currency: currency.toLowerCase(),
-                        receiptEmail: 'customer@example.com'
+                        receiptEmail: 'customer@example.com'  // किसी भी वैल्यू से काम चल जाएगा
                     },
                     lineItems: [{
                         title: 'Cash Mines Deposit',
@@ -40,9 +39,11 @@ export default async function handler(req, res) {
                         quantity: 1
                     }],
                     recipient: {
-                        walletAddress: recipientAddress,
-                        chain: chain,
-                        currency: settleCurrency
+                        walletAddress: recipientAddress    // सिर्फ़ वॉलेट एड्रेस
+                    },
+                    settlement: {
+                        currency: settleCurrency,          // USDT
+                        chain: settleChain                // BSC
                     }
                 })
             });
@@ -50,11 +51,9 @@ export default async function handler(req, res) {
             const data = await response.json();
 
             if (data.order && data.order.orderId) {
-                // ✅ सही response properties: orderId और clientSecret
                 res.status(200).json({
                     checkout_url: `${crossmintBase}/checkout/${data.order.orderId}`,
                     order_id: data.order.orderId,
-                    client_secret: data.clientSecret,
                     gateway: 'crossmint'
                 });
             } else {
