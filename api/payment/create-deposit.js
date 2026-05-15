@@ -9,7 +9,7 @@ export default async function handler(req, res) {
 
     try {
         if (is_fiat) {
-            // ---- Crossmint (Google Pay, Cards, etc.) ----
+            // ---- Crossmint (Google Pay, Cards) ----
             const crossmintApiKey = process.env.CROSSMINT_API_KEY;
             if (!crossmintApiKey) throw new Error('CROSSMINT_API_KEY not set');
 
@@ -17,16 +17,19 @@ export default async function handler(req, res) {
                 ? 'https://staging.crossmint.com'
                 : 'https://www.crossmint.com';
 
-            const response = await fetch(`${crossmintBase}/api/2022-06-09/checkout/sessions`, {
+            // ✅ सही API endpoint: /api/2022-06-09/orders
+            const response = await fetch(`${crossmintBase}/api/2022-06-09/orders`, {
                 method: 'POST',
-                headers: { 'x-api-key': crossmintApiKey, 'Content-Type': 'application/json' },
+                headers: {
+                    'x-api-key': crossmintApiKey,
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({
-                    recipient: {
-                        walletAddress: recipientAddress,
-                        chain: chain,
-                        currency: settleCurrency
+                    payment: {
+                        method: 'card',
+                        currency: currency.toLowerCase(),
+                        receiptEmail: 'customer@example.com'
                     },
-                    paymentMethods: ['card', 'google-pay'],
                     lineItems: [{
                         title: 'Cash Mines Deposit',
                         description: `Deposit ${amount} ${currency}`,
@@ -36,30 +39,40 @@ export default async function handler(req, res) {
                         },
                         quantity: 1
                     }],
-                    successUrl: `${baseUrl}/?payment=success`,
-                    cancelUrl: `${baseUrl}/?payment=cancel`
+                    recipient: {
+                        walletAddress: recipientAddress,
+                        chain: chain,
+                        currency: settleCurrency
+                    }
                 })
             });
 
             const data = await response.json();
-            if (data.checkoutUrl) {
+
+            if (data.order && data.order.orderId) {
+                // ✅ सही response properties: orderId और clientSecret
                 res.status(200).json({
-                    checkout_url: data.checkoutUrl,
-                    session_id: data.id,
+                    checkout_url: `${crossmintBase}/checkout/${data.order.orderId}`,
+                    order_id: data.order.orderId,
+                    client_secret: data.clientSecret,
                     gateway: 'crossmint'
                 });
             } else {
-                res.status(400).json({ error: data.message || 'Failed to create session' });
+                console.error('Crossmint error:', data);
+                res.status(400).json({ error: data.message || 'Failed to create order' });
             }
 
         } else {
-            // ---- NOWPayments (USDT/Crypto) ----
+            // ---- NOWPayments Crypto Invoice (USDT) ----
             const nowApiKey = process.env.NOWPAYMENTS_API_KEY;
             if (!nowApiKey) throw new Error('NOWPAYMENTS_API_KEY not set');
 
             const response = await fetch('https://api.nowpayments.io/v1/invoice', {
                 method: 'POST',
-                headers: { 'x-api-key': nowApiKey, 'Content-Type': 'application/json' },
+                headers: {
+                    'x-api-key': nowApiKey,
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({
                     price_amount: amount,
                     price_currency: 'USD',
