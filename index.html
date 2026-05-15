@@ -31,6 +31,30 @@
         .overlay-sub { color:var(--text-dim); font-size:16px; margin-bottom:20px; }
         .overlay-btn { background:var(--gold); color:#000; border:none; border-radius:14px; padding:14px 32px; font-weight:700; font-size:16px; cursor:pointer; box-shadow:0 0 20px rgba(245,182,66,0.5); }
 
+        /* ---------- COMING SOON overlay ---------- */
+        .coming-soon-overlay {
+            position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.92);
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            z-index:250; opacity:0; pointer-events:none; transition:opacity 0.3s;
+        }
+        .coming-soon-overlay.active { opacity:1; pointer-events:auto; }
+        .coming-soon-box {
+            background:var(--surface); border:1px solid var(--gold); border-radius:20px;
+            padding:30px; text-align:center; position:relative; max-width:320px; width:90%;
+        }
+        .coming-soon-close {
+            position:absolute; top:10px; right:15px; background:none; border:none;
+            font-size:28px; color:var(--text-dim); cursor:pointer; line-height:1;
+        }
+        .coming-soon-title {
+            font-size:36px; font-weight:800; color:var(--gold);
+            text-shadow:0 0 20px rgba(245,182,66,0.6); margin-bottom:10px;
+        }
+        .coming-soon-sub {
+            color:var(--text-dim); font-size:14px;
+        }
+        /* ---------------------------------------- */
+
         .header { display:flex; flex-direction:column; margin-bottom:20px; }
         .brand-left { display:flex; flex-direction:column; }
         .brand-top { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
@@ -156,12 +180,14 @@
     </style>
 </head>
 <body>
+    <!-- Splash Screen -->
     <div id="splashOverlay" style="position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; justify-content:center; align-items:center;">
         <div id="leftDoor" style="position:absolute; left:0; top:0; width:50%; height:100%; background:var(--bg);"></div>
         <div id="rightDoor" style="position:absolute; right:0; top:0; width:50%; height:100%; background:var(--bg);"></div>
         <div id="splashText" style="font-size:48px; font-weight:800; color:var(--gold); font-family:'Dancing Script', cursive; z-index:2;">POWERED BY RK</div>
     </div>
 
+    <!-- Main Container -->
     <div class="container" id="app">
         <div class="header">
             <div class="brand-left">
@@ -232,6 +258,7 @@
             </div>
         </div>
 
+        <!-- Game Config -->
         <div class="game-config" id="gameConfig">
             <div class="input-group">
                 <span class="input-label" id="betLabel">AMOUNT BET (MIN 10 USDT)</span>
@@ -244,10 +271,12 @@
             <button class="cashout-btn" id="cashoutBtn" disabled>💰 <span data-i18n="cashout">Cashout</span></button>
         </div>
 
+        <!-- Grid -->
         <div class="grid" id="grid"></div>
         <button class="start-btn" id="startBtn">🔥 <span data-i18n="start_bet">START BET</span></button>
         <div class="message" id="gameMsg"></div>
 
+        <!-- History -->
         <div class="history-section" id="historySection">
             <div class="history-title" data-i18n="players_bets">📊 Players Bets</div>
             <table class="history-table">
@@ -257,12 +286,23 @@
         </div>
     </div>
 
+    <!-- Lose Overlay -->
     <div class="overlay" id="loseOverlay">
         <div class="overlay-text">💣 <span data-i18n="you_lost">YOU LOST</span></div>
         <div class="overlay-sub" data-i18n="better_luck">Better luck next time!</div>
         <button class="overlay-btn" onclick="closeOverlay()" data-i18n="play_again">PLAY AGAIN</button>
     </div>
 
+    <!-- Coming Soon Overlay -->
+    <div class="coming-soon-overlay" id="comingSoonOverlay">
+        <div class="coming-soon-box">
+            <button class="coming-soon-close" onclick="closeComingSoon()">✕</button>
+            <div class="coming-soon-title">🚀 COMING SOON...</div>
+            <div class="coming-soon-sub">This currency is not yet supported.<br>Please use Default (USDT) to play.</div>
+        </div>
+    </div>
+
+    <!-- Settings -->
     <div class="settings-backdrop" id="settingsBackdrop" onclick="closeSettings(event)"></div>
     <div class="settings-fullscreen" id="settingsPanel">
         <button class="settings-close" onclick="closeSettings(event)">✕</button>
@@ -292,6 +332,7 @@
         </div>
     </div>
 
+    <!-- Withdraw Modal -->
     <div class="withdraw-modal-overlay" id="withdrawOverlay">
         <div class="withdraw-modal">
             <h3>💸 Withdraw</h3>
@@ -532,24 +573,35 @@
             document.execCommand('copy'); document.body.removeChild(ta); alert('Address copied!');
         }
 
+        // ======================= COMING SOON FUNCTIONS =======================
+        function showComingSoon() {
+            document.getElementById('comingSoonOverlay').classList.add('active');
+        }
+
+        function closeComingSoon() {
+            document.getElementById('comingSoonOverlay').classList.remove('active');
+        }
+
         // ======================= DEPOSIT LOGIC =======================
         function triggerFiatDeposit() {
+            // If any non-Default currency is selected, show "COMING SOON"
+            if (displayCurrency !== "DEFAULT") {
+                showComingSoon();
+                return;
+            }
+
+            // Default (USDT) deposit via NOWPayments
             const cur = getCurrencyInfo(displayCurrency);
             const min = getMinBetLocal().toFixed(2);
             const sym = cur.symbol;
             const amountStr = prompt(`Enter amount in ${sym} (min ${min} ${sym}):`);
             if (!amountStr) return;
             const amount = parseFloat(amountStr);
-            if (isNaN(amount) || amount < getMinBetLocal()) {
-                alert(`Minimum deposit is ${min} ${sym}`);
+            if (isNaN(amount) || amount < MIN_BET_USDT) {
+                alert(`Minimum deposit is ${MIN_BET_USDT} USDT`);
                 return;
             }
             pendingDepositAmount = amount;
-
-            if (displayCurrency !== "DEFAULT") {
-                window.open('https://buy.moonpay.com?apiKey=pk_test_UsGQ6CEWkQe1F2U9ZMUUqayUVEH7&walletAddress=0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4&currencyCode=' + displayCurrency.toLowerCase() + '&baseCurrencyAmount=' + amount, '_blank');
-                return;
-            }
 
             const msgDiv = document.getElementById('fiatDepositMsg');
             msgDiv.textContent = 'Creating payment link...';
@@ -558,11 +610,7 @@
             fetch('/api/payment/create-deposit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    user_id: userId,
-                    amount: amount,
-                    currency: 'USD'
-                })
+                body: JSON.stringify({ user_id: userId, amount: amount, currency: 'USD' })
             })
             .then(res => res.json())
             .then(data => {
@@ -665,7 +713,7 @@
         let userName = "Guest", userAvatar = "😊";
         const avatarOptions = ["🐱","🐶","🐸","🐼","🐨","🦊","🐯","🐻‍❄️","🐵","🦁"];
 
-        const balanceEl = document.getElementById('balanceDisplay'), gridEl = document.getElementById('grid'), startBtn = document.getElementById('startBtn'), cashoutBtn = document.getElementById('cashoutBtn'), panelCashoutBtn = document.getElementById('panelCashoutBtn'), panelCashoutSection = document.getElementById('panelCashoutSection'), betInput = document.getElementById('betInput'), minesInput = document.getElementById('minesInput'), gameMsg = document.getElementById('gameMsg'), loseOverlay = document.getElementById('loseOverlay'), settingsPanel = document.getElementById('settingsPanel'), settingsBackdrop = document.getElementById('settingsBackdrop'), promoMsg = document.getElementById('promoMsg'), headerAvatar = document.getElementById('headerAvatar'), headerUsername = document.getElementById('headerUsername'), usernameInput = document.getElementById('usernameInput'), avatarGrid = document.getElementById('avatarGrid'), historyBody = document.getElementById('historyBody');
+        const gridEl = document.getElementById('grid'), startBtn = document.getElementById('startBtn'), cashoutBtn = document.getElementById('cashoutBtn'), panelCashoutBtn = document.getElementById('panelCashoutBtn'), panelCashoutSection = document.getElementById('panelCashoutSection'), betInput = document.getElementById('betInput'), minesInput = document.getElementById('minesInput'), gameMsg = document.getElementById('gameMsg'), loseOverlay = document.getElementById('loseOverlay'), settingsPanel = document.getElementById('settingsPanel'), settingsBackdrop = document.getElementById('settingsBackdrop'), promoMsg = document.getElementById('promoMsg'), headerAvatar = document.getElementById('headerAvatar'), headerUsername = document.getElementById('headerUsername'), usernameInput = document.getElementById('usernameInput'), avatarGrid = document.getElementById('avatarGrid'), historyBody = document.getElementById('historyBody');
 
         const tg = window.Telegram.WebApp; tg.expand(); tg.ready();
         const userId = tg.initDataUnsafe?.user?.id || 'demo_user';
@@ -704,6 +752,12 @@
         }
 
         function startGame() {
+            // Block game start for non-USDT currencies
+            if (displayCurrency !== "DEFAULT") {
+                showComingSoon();
+                return;
+            }
+
             const balanceNow = getCurrentBalance();
             if (balanceNow <= 0) { alert(translations[userLanguage]?.insufficient || "Please add funds to play."); triggerFiatDeposit(); return; }
             const betVal = parseFloat(betInput.value), minesVal = parseInt(minesInput.value);
