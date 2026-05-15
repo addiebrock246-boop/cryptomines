@@ -4,12 +4,12 @@ export default async function handler(req, res) {
     const { amount, currency, is_fiat } = req.body;
     const baseUrl = process.env.BASE_URL || 'https://cryptomines.vercel.app';
     const recipientAddress = '0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4'; // तेरी Trust Wallet (BSC)
-    const settleChain = 'bsc';
-    const settleCurrency = 'usdt';
+    // BSC नेटवर्क पर USDT का कॉन्ट्रैक्ट एड्रेस
+    const usdtBscContract = '0x55d398326f99059fF775485246999027B3197955';
 
     try {
         if (is_fiat) {
-            // ---- Crossmint (Google Pay, Cards) ----
+            // ---- Crossmint Onramp (Google Pay, Cards) ----
             const crossmintApiKey = process.env.CROSSMINT_API_KEY;
             if (!crossmintApiKey) throw new Error('CROSSMINT_API_KEY not set');
 
@@ -24,29 +24,22 @@ export default async function handler(req, res) {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    payment: {
-                        method: 'card',
-                        currency: currency.toLowerCase(),
-                        receiptEmail: 'no-reply@example.com'
-                    },
-                    lineItems: [                             // ✅ camelCase – यही सही है
+                    lineItems: [
                         {
-                            title: 'Cash Mines Deposit',
-                            description: `Deposit ${amount} ${currency}`,
-                            price: {
-                                amount: amount.toString(),
-                                currency: currency.toLowerCase()
+                            tokenLocator: `bsc:${usdtBscContract}`,   // BSC पर USDT
+                            executionParameters: {
+                                mode: "exact-in",
+                                amount: amount.toString(),          // कितना USDT खरीदना है
                             },
-                            quantity: 1
-                        }
+                        },
                     ],
-                    recipient: {
-                        walletAddress: recipientAddress     // सिर्फ़ एड्रेस
+                    payment: {
+                        method: "card",                             // कार्ड पेमेंट
+                        receiptEmail: "no-reply@example.com",       // KYC के लिए ज़रूरी
                     },
-                    settlement: {
-                        currency: settleCurrency,           // USDT
-                        chain: settleChain                 // BSC
-                    }
+                    recipient: {
+                        walletAddress: recipientAddress,            // तेरा BSC वॉलेट
+                    },
                 })
             });
 
