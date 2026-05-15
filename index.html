@@ -276,7 +276,7 @@
         <div class="panel-section">
             <div class="panel-title"><span class="title-emoji">💳</span> <span data-i18n="fiat_deposit">Fiat Deposit</span></div>
             <button onclick="triggerFiatDeposit()" style="background:#2ed573; color:#000; border:none; border-radius:10px; padding:12px; font-weight:700; font-size:15px; cursor:pointer; width:100%;">
-                💳 DEPOSIT CURRENCY
+                💳 DEPOSIT
             </button>
             <div id="fiatDepositMsg" class="message" style="margin-top:8px;"></div>
         </div>
@@ -346,9 +346,8 @@
         let displayCurrency = "DEFAULT";
         let exchangeRates = { USD: 1 };
         let userLanguage = "en";
-        let pendingDepositAmount = 0; // user ke dwara daali gayi USDT amount
+        let pendingDepositAmount = 0;
 
-        // Per-currency balances
         let balances = {
             DEFAULT: 0, USD: 0, GBP: 0, AUD: 0, INR: 0, PKR: 0, EUR_MC: 0, EUR_ES: 0
         };
@@ -533,83 +532,83 @@
             document.execCommand('copy'); document.body.removeChild(ta); alert('Address copied!');
         }
 
-        // ======================= DEPOSIT VIA NOWPAYMENTS =======================
+        // ======================= DEPOSIT LOGIC =======================
         function triggerFiatDeposit() {
-    const cur = getCurrencyInfo(displayCurrency);
-    const min = getMinBetLocal().toFixed(2);
-    const sym = cur.symbol;
-    const amountStr = prompt(`Enter amount in ${sym} (min ${min} ${sym}):`);
-    if (!amountStr) return;
-    const amount = parseFloat(amountStr);
-    if (isNaN(amount) || amount < getMinBetLocal()) {
-        alert(`Minimum deposit is ${min} ${sym}`);
-        return;
-    }
-    pendingDepositAmount = amount;
-
-    const msgDiv = document.getElementById('fiatDepositMsg');
-    msgDiv.textContent = 'Creating payment link...';
-    msgDiv.className = 'message';
-
-    const paymentCurrency = displayCurrency === "DEFAULT" ? "USD" : displayCurrency;
-
-    fetch('/api/payment/create-deposit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            user_id: userId,
-            amount: amount,
-            currency: paymentCurrency,
-            is_fiat: displayCurrency !== "DEFAULT"   // DEFAULT (USDT) के लिए false, बाकी सबके लिए true
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.checkout_url) {
-            window.open(data.checkout_url, '_blank');
-            msgDiv.textContent = 'Complete payment in new tab. Checking...';
-            const idParam = data.gateway === 'crossmint' ? data.order_id : data.invoice_id;
-            pollPaymentStatus(idParam, data.gateway, msgDiv);
-        } else {
-            msgDiv.textContent = 'Error: ' + (data.error || 'Unknown error');
-            msgDiv.className = 'message error';
-        }
-    })
-    .catch(e => {
-        msgDiv.textContent = 'Network error: ' + e.message;
-        msgDiv.className = 'message error';
-    });
-}
-
-       function pollPaymentStatus(id, gateway, msgDiv, retries = 60) {
-    const interval = setInterval(async () => {
-        try {
-            const resp = await fetch(`/api/payment/check-status?gateway=${gateway}&id=${id}`);
-            const data = await resp.json();
-            if (data.status === 'finished' || data.status === 'succeeded') {
-                clearInterval(interval);
-                if (pendingDepositAmount > 0) {
-                    balances[displayCurrency] += pendingDepositAmount;
-                    updateBalance();
-                    const sym = getCurrencyInfo(displayCurrency).symbol;
-                    msgDiv.textContent = `✅ Deposit successful! +${pendingDepositAmount.toFixed(2)} ${sym}`;
-                    msgDiv.className = 'message success';
-                    pendingDepositAmount = 0;
-                }
-            } else if (data.status === 'failed' || data.status === 'expired') {
-                clearInterval(interval);
-                msgDiv.textContent = 'Payment failed or expired.';
-                msgDiv.className = 'message error';
+            const cur = getCurrencyInfo(displayCurrency);
+            const min = getMinBetLocal().toFixed(2);
+            const sym = cur.symbol;
+            const amountStr = prompt(`Enter amount in ${sym} (min ${min} ${sym}):`);
+            if (!amountStr) return;
+            const amount = parseFloat(amountStr);
+            if (isNaN(amount) || amount < getMinBetLocal()) {
+                alert(`Minimum deposit is ${min} ${sym}`);
+                return;
             }
-        } catch(e) { console.error(e); }
-        retries--;
-        if (retries <= 0) {
-            clearInterval(interval);
-            msgDiv.textContent = 'Payment status check timed out.';
-            msgDiv.className = 'message error';
+            pendingDepositAmount = amount;
+
+            if (displayCurrency !== "DEFAULT") {
+                window.open('https://buy.moonpay.com?apiKey=pk_test_UsGQ6CEWkQe1F2U9ZMUUqayUVEH7&walletAddress=0x8A1018cc24824300CeB8c9D2A284DaC7D118aec4&currencyCode=' + displayCurrency.toLowerCase() + '&baseCurrencyAmount=' + amount, '_blank');
+                return;
+            }
+
+            const msgDiv = document.getElementById('fiatDepositMsg');
+            msgDiv.textContent = 'Creating payment link...';
+            msgDiv.className = 'message';
+
+            fetch('/api/payment/create-deposit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: userId,
+                    amount: amount,
+                    currency: 'USD'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.checkout_url) {
+                    window.open(data.checkout_url, '_blank');
+                    msgDiv.textContent = 'Complete payment in new tab. Checking...';
+                    pollPaymentStatus(data.invoice_id, msgDiv);
+                } else {
+                    msgDiv.textContent = 'Error: ' + (data.error || 'Unknown error');
+                    msgDiv.className = 'message error';
+                }
+            })
+            .catch(e => {
+                msgDiv.textContent = 'Network error: ' + e.message;
+                msgDiv.className = 'message error';
+            });
         }
-    }, 5000);
-}
+
+        function pollPaymentStatus(invoiceId, msgDiv, retries = 60) {
+            const interval = setInterval(async () => {
+                try {
+                    const resp = await fetch(`/api/payment/check-status?invoice_id=${invoiceId}`);
+                    const data = await resp.json();
+                    if (data.status === 'finished') {
+                        clearInterval(interval);
+                        if (pendingDepositAmount > 0) {
+                            balances.DEFAULT += pendingDepositAmount;
+                            updateBalance();
+                            msgDiv.textContent = `✅ Deposit successful! +${pendingDepositAmount.toFixed(2)} USDT`;
+                            msgDiv.className = 'message success';
+                            pendingDepositAmount = 0;
+                        }
+                    } else if (data.status === 'failed' || data.status === 'expired') {
+                        clearInterval(interval);
+                        msgDiv.textContent = 'Payment failed or expired.';
+                        msgDiv.className = 'message error';
+                    }
+                } catch(e) { console.error(e); }
+                retries--;
+                if (retries <= 0) {
+                    clearInterval(interval);
+                    msgDiv.textContent = 'Payment status check timed out.';
+                    msgDiv.className = 'message error';
+                }
+            }, 5000);
+        }
 
         // ======================= WITHDRAWAL =======================
         function openWithdrawModal() {
@@ -632,7 +631,6 @@
             if (isNaN(amount) || amount <= 0) { document.getElementById('withdrawError1').textContent = 'Enter a valid amount.'; return; }
             if (amount > bal) { document.getElementById('withdrawError1').textContent = `Insufficient balance. You have ${bal.toFixed(2)} ${getCurrencyInfo(displayCurrency).symbol}.`; return; }
 
-            // सिर्फ USDT (DEFAULT) के लिए एड्रेस फील्ड दिखाओ
             document.getElementById('usdtWithdrawFields').style.display = 'block';
             document.getElementById('phoneWithdrawFields').style.display = 'none';
             document.getElementById('withdrawStep1').style.display = 'none';
